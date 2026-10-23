@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Baixar o app — Culto Expansão</title>
+<style>
+  :root {
+    --bg: #0f1220; --panel: #171a2b; --ink: #eef0fa; --muted: #9aa1b8;
+    --line: #272b40; --accent: #8792ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin: 16px 0; }
+  .btn {
+    display: inline-block; padding: 14px 20px; border-radius: 10px;
+    background: var(--accent); color: #0f1220; font-weight: 700; text-decoration: none;
+    font-size: 16px;
+  }
+  ol { padding-left: 20px; } li { margin: 6px 0; }
+  code { background: #000; padding: 1px 6px; border-radius: 4px; font-size: 90%; }
+  .warn { color: #ffd84a; font-size: 14px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>App Culto Expansão (Android)</h1>
+    <p class="sub">Bolha flutuante por cima de outros apps + notificação fixa com o momento ao vivo.</p>
+
+    <div class="card">
+      <a class="btn" href="culto-expansao.apk" download>⬇ Baixar APK (5,4 MB)</a>
+      <p class="warn" style="margin:12px 0 0">⚠ Esse APK é "sideload": você instala manualmente, não vem pela Play Store.</p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 10px">Como instalar</h3>
+      <ol>
+        <li>Baixe o <code>.apk</code> acima pelo navegador do celular.</li>
+        <li>Abra o arquivo. O Android vai perguntar se autoriza instalar apps dessa origem — autorize.</li>
+        <li>Instale e abra o app <strong>Culto Expansão</strong>.</li>
+        <li>Faça login normalmente (mesma conta do site).</li>
+        <li>No topo do app, toque em <strong>"Ativar bolha"</strong>. Ele vai pedir a permissão <em>"Exibir sobre outros apps"</em> — ative e volte.</li>
+        <li>Toque em <strong>"Ativar avisos"</strong> pra receber notificação / vibração quando chegar seu momento.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 10px">Como funciona</h3>
+      <ul>
+        <li>O app é a mesma coisa que o site <a href="/">cronograma.duckdns.org</a>, só que embutido num app nativo.</li>
+        <li>A <strong>bolha flutuante</strong> arrasta pela tela e mostra <strong>AGORA</strong> e <strong>A SEGUIR</strong>, mesmo com você no WhatsApp, câmera, etc.</li>
+        <li>A <strong>notificação fixa</strong> na barra do Android atualiza sozinha a cada 15 s.</li>
+        <li>Quando chega o seu momento (nome bate com responsável): vibração + destaque amarelo "⚡ VOCÊ É O PRÓXIMO".</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 10px">Limites conhecidos</h3>
+      <ul>
+        <li>Só Android (iPhone não permite overlay).</li>
+        <li>Primeira versão (debug build), sem Play Store.</li>
+        <li>Pra desinstalar: segure o ícone → <em>Desinstalar</em>, igual qualquer app.</li>
+      </ul>
+    </div>
+
+    <p style="color: var(--muted); font-size: 13px; margin-top: 24px;">
+      <a href="/">← Voltar ao site</a>
+    </p>
+  </div>
+</body>
+</html>

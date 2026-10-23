@@ -261,6 +261,7 @@
       <span class="user" id="userLabel"></span>
       <button id="nomeBtn" title="Meu nome no cronograma">Meu nome</button>
       <button id="notifBtn" title="Notificações" hidden>Ativar avisos</button>
+      <button id="bubbleBtn" title="Bolha flutuante" hidden>Bolha</button>
       <button id="themeBtn" class="theme-toggle" title="Alternar tema">Tema</button>
       <button id="logoutBtn">Sair</button>
     </div>
@@ -344,6 +345,10 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   });
 }
+
+// --- Ponte para o app nativo Android (apenas quando aberto dentro do app) ---
+const Native = (typeof window.CultoNative !== "undefined") ? window.CultoNative : null;
+if (Native) document.documentElement.classList.add("in-native-app");
 
 const DEFAULT_MOMENTOS = [
   { hora: "18:30", hora_fim: "19:00", atividade: "Intercessão", responsavel: "" },
@@ -484,6 +489,7 @@ async function showApp(user) {
   app.hidden = false; app.style.display = "";
   el("userLabel").textContent = user.email || "";
   updateNotifButton();
+  updateBubbleButton();
   initDefaultDate();
   await loadAll();
   setupRealtime();
@@ -737,6 +743,22 @@ function render() {
   }
   renderLive();
   scheduleAllNotifs();
+  pushToNative();
+}
+
+function pushToNative() {
+  if (!Native) return;
+  try {
+    const payload = cultos.map((c) => ({
+      id: c.id, data: c.data, hora: c.hora, tema: c.tema,
+      momentos: (c.momentos || []).map((m) => ({
+        id: m.id, hora: m.hora, hora_fim: m.hora_fim || "",
+        atividade: m.atividade || "", responsavel: m.responsavel || "",
+      })),
+    }));
+    Native.setSchedule(JSON.stringify(payload));
+    if (meuNome && Native.setNome) Native.setNome(meuNome);
+  } catch (e) {}
 }
 function renderCulto(c) {
   const momentos = [...(c.momentos || [])].sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
@@ -837,8 +859,32 @@ function abrirMeuNome() {
     toast(meuNome ? ("Nome salvo: " + meuNome) : "Nome removido.");
     renderLive();
     scheduleAllNotifs();
+    if (Native && Native.setNome) try { Native.setNome(meuNome); } catch (e) {}
   });
 }
+
+// ================= Bolha nativa (Android app) =================
+function updateBubbleButton() {
+  const b = el("bubbleBtn");
+  if (!Native) { b.hidden = true; return; }
+  b.hidden = false;
+  const on = (() => { try { return !!Native.isOverlayActive(); } catch (e) { return false; } })();
+  b.textContent = on ? "Bolha ativa" : "Ativar bolha";
+}
+el("bubbleBtn").addEventListener("click", () => {
+  if (!Native) return;
+  const on = (() => { try { return !!Native.isOverlayActive(); } catch (e) { return false; } })();
+  if (on) { Native.stopOverlay(); setTimeout(updateBubbleButton, 300); return; }
+  const hasPerm = (() => { try { return !!Native.hasOverlayPermission(); } catch (e) { return true; } })();
+  if (!hasPerm) {
+    toast("Autorize 'Exibir sobre outros apps' e volte aqui.");
+    Native.requestOverlayPermission();
+    return;
+  }
+  Native.startOverlay();
+  setTimeout(updateBubbleButton, 400);
+  toast("Bolha ativada.");
+});
 
 // ================= Notificações =================
 const notifState = {

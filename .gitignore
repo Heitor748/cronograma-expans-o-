@@ -1,0 +1,15 @@
+# Android build outputs
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+android/.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (não usamos, mas por via das dúvidas)
+node_modules/
