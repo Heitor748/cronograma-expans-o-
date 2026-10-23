@@ -137,6 +137,20 @@
   .theme-toggle { font-size: 13px; }
   .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px; z-index: 50;
+  }
+  .modal {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 18px; width: 100%; max-width: 520px;
+    max-height: 90vh; overflow: auto;
+  }
+  .modal h3 { margin: 0 0 12px; font-size: 16px; }
+  .modal .form-footer { margin-top: 14px; }
+
   /* Login screen */
   .login-wrap {
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
@@ -265,6 +279,7 @@
   </section>
 </div>
 
+<div id="modalRoot"></div>
 <div id="toast" class="toast"></div>
 
 <script type="module">
@@ -563,31 +578,84 @@ el("lista").addEventListener("submit", async (e) => {
   else form.reset();
 });
 
-async function editCulto(culto) {
-  const tema = prompt("Tema do culto:", culto.tema || ""); if (tema === null) return;
-  const pregador = prompt("Pregador(a):", culto.pregador || ""); if (pregador === null) return;
-  const dirigente = prompt("Dirigente:", culto.dirigente || ""); if (dirigente === null) return;
-  const obs = prompt("Observações:", culto.obs || ""); if (obs === null) return;
-  const { error } = await supabase.from("cultos").update({
-    tema: tema.trim(), pregador: pregador.trim(),
-    dirigente: dirigente.trim(), obs: obs.trim(),
-  }).eq("id", culto.id);
-  if (error) toast("Erro: " + error.message);
+function openModal(html, onSubmit) {
+  const root = el("modalRoot");
+  root.innerHTML = `<div class="modal-overlay"><div class="modal">${html}</div></div>`;
+  const overlay = root.querySelector(".modal-overlay");
+  const form = root.querySelector("form");
+  const close = () => { root.innerHTML = ""; };
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+  root.querySelector("[data-cancel]").addEventListener("click", (e) => { e.preventDefault(); close(); });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = {};
+    for (const el of form.querySelectorAll("[name]")) fd[el.name] = el.value;
+    const ok = await onSubmit(fd);
+    if (ok !== false) close();
+  });
+  const first = form.querySelector("input, textarea"); if (first) first.focus();
 }
+
+async function editCulto(culto) {
+  openModal(`
+    <h3>Editar culto</h3>
+    <form>
+      <div class="field"><label>Tema / Título</label>
+        <input type="text" name="tema" value="${escapeHtml(culto.tema || "")}" /></div>
+      <div class="field" style="margin-top:8px"><label>Pregador(a)</label>
+        <input type="text" name="pregador" value="${escapeHtml(culto.pregador || "")}" /></div>
+      <div class="field" style="margin-top:8px"><label>Dirigente</label>
+        <input type="text" name="dirigente" value="${escapeHtml(culto.dirigente || "")}" /></div>
+      <div class="field" style="margin-top:8px"><label>Observações</label>
+        <textarea name="obs" rows="3">${escapeHtml(culto.obs || "")}</textarea></div>
+      <div class="form-footer">
+        <button type="button" data-cancel>Cancelar</button>
+        <button type="submit" class="primary">Salvar</button>
+      </div>
+    </form>
+  `, async (fd) => {
+    const { error } = await supabase.from("cultos").update({
+      tema: fd.tema.trim(), pregador: fd.pregador.trim(),
+      dirigente: fd.dirigente.trim(), obs: fd.obs.trim(),
+    }).eq("id", culto.id);
+    if (error) { toast("Erro: " + error.message); return false; }
+    toast("Culto atualizado.");
+  });
+}
+
 async function editItem(culto, itemId) {
   const item = culto.momentos.find((m) => m.id === itemId);
   if (!item) return;
-  const hora = prompt("Horário de início (HH:MM):", item.hora || ""); if (hora === null) return;
-  const hora_fim = prompt("Horário de fim (HH:MM) — deixe em branco se não houver:", item.hora_fim || ""); if (hora_fim === null) return;
-  const atividade = prompt("Atividade:", item.atividade || ""); if (atividade === null) return;
-  const responsavel = prompt("Responsável(is) — separe por vírgula ou linha:", item.responsavel || ""); if (responsavel === null) return;
-  const { error } = await supabase.from("momentos").update({
-    hora: hora.trim(),
-    hora_fim: hora_fim.trim() || null,
-    atividade: atividade.trim(),
-    responsavel: responsavel.trim(),
-  }).eq("id", itemId);
-  if (error) toast("Erro: " + error.message);
+  openModal(`
+    <h3>Editar momento</h3>
+    <form>
+      <div class="grid">
+        <div class="field col-6"><label>Início</label>
+          <input type="time" name="hora" value="${escapeHtml(item.hora || "")}" /></div>
+        <div class="field col-6"><label>Fim</label>
+          <input type="time" name="hora_fim" value="${escapeHtml(item.hora_fim || "")}" /></div>
+        <div class="field col-12"><label>Atividade</label>
+          <input type="text" name="atividade" value="${escapeHtml(item.atividade || "")}" required /></div>
+        <div class="field col-12"><label>Responsável(is)</label>
+          <textarea name="responsavel" rows="4" placeholder="Um por linha ou separados por vírgula">${escapeHtml(item.responsavel || "")}</textarea>
+          <div class="hint">Dica: um nome por linha vira várias linhas "→ Nome" no cronograma.</div>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button type="button" data-cancel>Cancelar</button>
+        <button type="submit" class="primary">Salvar</button>
+      </div>
+    </form>
+  `, async (fd) => {
+    const { error } = await supabase.from("momentos").update({
+      hora: fd.hora.trim(),
+      hora_fim: fd.hora_fim.trim() || null,
+      atividade: fd.atividade.trim(),
+      responsavel: fd.responsavel.trim(),
+    }).eq("id", itemId);
+    if (error) { toast("Erro: " + error.message); return false; }
+    toast("Momento atualizado.");
+  });
 }
 
 // ---------- render ----------
