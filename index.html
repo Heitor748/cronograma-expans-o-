@@ -350,17 +350,30 @@ el("loginForm").addEventListener("submit", async (e) => {
   const email = el("email").value.trim();
   const senha = el("senha").value;
   try {
+    const dbg = (m) => {
+      const d = el("loginErr");
+      d.hidden = false;
+      d.style.color = "var(--muted)";
+      d.textContent = m;
+    };
     if (authMode === "login") {
+      dbg("Enviando login...");
       const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
       if (error) throw error;
+      dbg("Resposta OK. session=" + !!data?.session + " user=" + !!data?.user);
       const u = data?.session?.user || data?.user;
-      if (u) { showApp(u); return; }
-      location.reload();
+      if (u) {
+        dbg("Abrindo app...");
+        try { await showApp(u); dbg("App aberto."); } catch(e){ dbg("Erro showApp: " + (e?.message||e)); }
+        return;
+      }
+      dbg("Sem user no retorno. Recarregando...");
+      setTimeout(() => location.reload(), 500);
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password: senha });
       if (error) throw error;
       const u = data?.session?.user || data?.user;
-      if (u && data?.session) { showApp(u); return; }
+      if (u && data?.session) { await showApp(u); return; }
       if (u && !data?.session) {
         toast("Conta criada. Verifique seu e-mail para confirmar o acesso.");
         authMode = "login"; updateAuthMode();
@@ -370,6 +383,7 @@ el("loginForm").addEventListener("submit", async (e) => {
     }
   } catch (err) {
     el("loginErr").textContent = traduzErro(err?.message || String(err));
+    el("loginErr").style.color = "var(--danger)";
     el("loginErr").hidden = false;
   } finally {
     el("loginSubmit").disabled = false;
