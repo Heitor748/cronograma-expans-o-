@@ -34,238 +34,179 @@
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0f1220;
-    --panel: #171a2b;
-    --ink: #eef0fa;
-    --muted: #9aa1b8;
-    --line: #272b40;
-    --accent: #8792ff;
-    --accent-ink: #0f1220;
-    --danger: #ff8378;
-    --ok: #67d49a;
-    --chip: #222642;
-    --row-alt: #1b1f33;
+    --bg: #0f1220; --panel: #171a2b; --ink: #eef0fa; --muted: #9aa1b8;
+    --line: #272b40; --accent: #8792ff; --accent-ink: #0f1220;
+    --danger: #ff8378; --ok: #67d49a; --chip: #222642; --row-alt: #1b1f33;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
-    background: var(--bg);
-    color: var(--ink);
+    background: var(--bg); color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.45;
-    min-height: 100vh;
+    line-height: 1.45; min-height: 100vh;
   }
-  .wrap {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 24px 16px 80px;
-  }
-  header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-  header h1 {
-    font-size: 22px;
-    margin: 0;
-    letter-spacing: -0.01em;
-  }
-  header .sub {
-    color: var(--muted);
-    font-size: 14px;
-  }
-  .actions {
-    margin-left: auto;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  header h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  header .sub { color: var(--muted); font-size: 14px; }
+  .actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .actions .user { font-size: 13px; color: var(--muted); margin-right: 4px; }
   button, .btn {
-    appearance: none;
-    border: 1px solid var(--line);
-    background: var(--panel);
-    color: var(--ink);
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    font-family: inherit;
+    appearance: none; border: 1px solid var(--line); background: var(--panel);
+    color: var(--ink); padding: 8px 12px; border-radius: 8px;
+    font-size: 14px; cursor: pointer; font-family: inherit;
   }
   button:hover, .btn:hover { border-color: var(--accent); }
   button.primary {
-    background: var(--accent);
-    color: var(--accent-ink);
-    border-color: var(--accent);
-    font-weight: 600;
+    background: var(--accent); color: var(--accent-ink);
+    border-color: var(--accent); font-weight: 600;
   }
-  button.danger {
-    color: var(--danger);
-    border-color: var(--line);
-    background: transparent;
-  }
+  button.danger { color: var(--danger); border-color: var(--line); background: transparent; }
+  button:disabled { opacity: .6; cursor: not-allowed; }
   .panel {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px; margin-bottom: 16px;
   }
   .panel h2 {
-    font-size: 15px;
-    margin: 0 0 12px;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-size: 15px; margin: 0 0 12px; letter-spacing: 0.02em;
+    text-transform: uppercase; color: var(--muted);
   }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 10px;
-  }
+  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; }
   .field { display: flex; flex-direction: column; gap: 4px; }
-  .field label {
-    font-size: 12px;
-    color: var(--muted);
-  }
+  .field label { font-size: 12px; color: var(--muted); }
   input, select, textarea {
-    font: inherit;
-    color: var(--ink);
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 7px;
-    padding: 8px 10px;
-    outline: none;
+    font: inherit; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; outline: none;
   }
   input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   textarea { resize: vertical; min-height: 36px; }
-  .col-2 { grid-column: span 2; }
-  .col-3 { grid-column: span 3; }
-  .col-4 { grid-column: span 4; }
-  .col-6 { grid-column: span 6; }
+  .col-2 { grid-column: span 2; } .col-3 { grid-column: span 3; }
+  .col-4 { grid-column: span 4; } .col-6 { grid-column: span 6; }
   .col-12 { grid-column: span 12; }
   @media (max-width: 720px) {
     .col-2, .col-3, .col-4, .col-6 { grid-column: span 12; }
   }
-  .form-footer {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    margin-top: 10px;
-  }
-  .filters {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: end;
-    margin-bottom: 10px;
-  }
+  .form-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; margin-bottom: 10px; }
   .filters .field { flex: 1 1 160px; }
   .chip {
-    display: inline-block;
-    background: var(--chip);
-    color: var(--ink);
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 12px;
+    display: inline-block; background: var(--chip); color: var(--ink);
+    padding: 2px 8px; border-radius: 999px; font-size: 12px;
   }
   .culto-group {
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 14px;
-    background: var(--panel);
+    border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    margin-bottom: 14px; background: var(--panel);
   }
   .culto-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    background: var(--row-alt);
-    border-bottom: 1px solid var(--line);
-    flex-wrap: wrap;
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+    background: var(--row-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap;
   }
-  .culto-head .date {
-    font-weight: 700;
-    font-size: 15px;
-  }
+  .culto-head .date { font-weight: 700; font-size: 15px; }
   .culto-head .meta { color: var(--muted); font-size: 13px; }
   .culto-head .right { margin-left: auto; display: flex; gap: 6px; }
-  table.items {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
+  table.items { width: 100%; border-collapse: collapse; font-size: 14px; }
   table.items th, table.items td {
-    text-align: left;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--line);
-    vertical-align: top;
+    text-align: left; padding: 10px 12px;
+    border-bottom: 1px solid var(--line); vertical-align: top;
   }
   table.items th {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--muted);
-    font-weight: 600;
-    background: transparent;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em;
+    color: var(--muted); font-weight: 600; background: transparent;
   }
   table.items tr:last-child td { border-bottom: none; }
   table.items .time { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); width: 70px; }
   table.items .act-col { width: 1%; white-space: nowrap; }
   table.items .act-col button { padding: 4px 8px; font-size: 12px; }
-  .empty {
-    padding: 24px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 14px;
-  }
+  .empty { padding: 24px; text-align: center; color: var(--muted); font-size: 14px; }
   details.add-item {
-    padding: 10px 14px;
-    border-top: 1px solid var(--line);
-    background: var(--row-alt);
+    padding: 10px 14px; border-top: 1px solid var(--line); background: var(--row-alt);
   }
   details.add-item summary {
-    cursor: pointer;
-    font-size: 13px;
-    color: var(--accent);
-    user-select: none;
+    cursor: pointer; font-size: 13px; color: var(--accent); user-select: none;
   }
   details.add-item[open] summary { margin-bottom: 10px; }
   .inline-form .grid { gap: 8px; }
   .toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--ink);
-    color: var(--bg);
-    padding: 10px 16px;
-    border-radius: 999px;
-    font-size: 13px;
-    opacity: 0;
-    transition: opacity .2s;
-    pointer-events: none;
-    z-index: 10;
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--bg); padding: 10px 16px;
+    border-radius: 999px; font-size: 13px; opacity: 0;
+    transition: opacity .2s; pointer-events: none; z-index: 10;
+    max-width: 90vw;
   }
   .toast.show { opacity: 1; }
   .theme-toggle { font-size: 13px; }
   .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* Login screen */
+  .login-wrap {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .login-card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 24px; width: 100%; max-width: 380px;
+  }
+  .login-card h1 { margin: 0 0 6px; font-size: 20px; }
+  .login-card .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .login-card .field { margin-bottom: 10px; }
+  .login-card .err {
+    color: var(--danger); font-size: 13px; margin: 8px 0 0;
+  }
+  .login-card .sw {
+    margin-top: 14px; font-size: 13px; color: var(--muted); text-align: center;
+  }
+  .login-card .sw a { color: var(--accent); cursor: pointer; }
+  .status-dot {
+    display:inline-block; width:8px; height:8px; border-radius:50%;
+    background: var(--muted); margin-right:6px; vertical-align:middle;
+  }
+  .status-dot.online { background: var(--ok); }
+  .status-dot.offline { background: var(--danger); }
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- LOGIN SCREEN -->
+<div id="loginView" class="login-wrap" hidden>
+  <div class="login-card">
+    <h1>Culto Expansão</h1>
+    <div class="sub">Entre para ver e editar o cronograma.</div>
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" autocomplete="email" required />
+      </div>
+      <div class="field">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" autocomplete="current-password" required minlength="6" />
+      </div>
+      <div class="form-footer" style="justify-content: space-between; align-items: center;">
+        <small class="hint" id="modeHint">Já tem conta? Faça login.</small>
+        <button type="submit" class="primary" id="loginSubmit">Entrar</button>
+      </div>
+      <p class="err" id="loginErr" hidden></p>
+      <div class="sw">
+        <span id="swText">Novo por aqui?</span>
+        <a id="swLink">Criar conta</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appView" class="wrap" hidden>
   <header>
     <div>
       <h1>Cronograma — Culto Expansão</h1>
-      <div class="sub">Organize cada culto por data, responsáveis e momentos.</div>
+      <div class="sub">
+        <span id="statusDot" class="status-dot" title="status"></span>
+        <span id="statusText">conectando…</span>
+      </div>
     </div>
     <div class="actions">
-      <button id="exportBtn" title="Exportar JSON">Exportar</button>
-      <button id="importBtn" title="Importar JSON">Importar</button>
-      <input type="file" id="importFile" accept="application/json" hidden />
+      <span class="user" id="userLabel"></span>
       <button id="themeBtn" class="theme-toggle" title="Alternar tema">Tema</button>
+      <button id="logoutBtn">Sair</button>
     </div>
   </header>
 
@@ -300,7 +241,7 @@
       </div>
       <div class="form-footer">
         <button type="reset">Limpar</button>
-        <button type="submit" class="primary">Adicionar culto</button>
+        <button type="submit" class="primary" id="addCultoBtn">Adicionar culto</button>
       </div>
     </form>
   </section>
@@ -322,342 +263,405 @@
     </div>
     <div id="lista"></div>
   </section>
-
-  <section class="panel">
-    <h2>Sobre</h2>
-    <p style="margin: 0; color: var(--muted); font-size: 14px;">
-      Os dados ficam salvos neste navegador (localStorage). Use <strong>Exportar</strong> para fazer backup
-      ou compartilhar com a equipe, e <strong>Importar</strong> para carregar um arquivo.
-    </p>
-  </section>
 </div>
 
 <div id="toast" class="toast"></div>
 
-<script>
-(function () {
-  const STORAGE_KEY = "cronograma-expansao-v1";
-  const THEME_KEY = "cronograma-expansao-theme";
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
-  const DEFAULT_MOMENTOS = [
-    { hora: "19:30", atividade: "Boas-vindas", responsavel: "" },
-    { hora: "19:35", atividade: "Louvor", responsavel: "" },
-    { hora: "20:00", atividade: "Avisos / Ofertório", responsavel: "" },
-    { hora: "20:10", atividade: "Mensagem", responsavel: "" },
-    { hora: "20:50", atividade: "Ministração / Oração", responsavel: "" },
-  ];
+const SUPABASE_URL = "https://hlanykgmgobvmkdbrhah.supabase.co";
+const SUPABASE_KEY = "sb_publishable_UryQ3e7SexzuANnyAgr8Lw_p-LMyaoy";
 
-  let state = loadState();
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+});
 
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { cultos: [] };
-      const parsed = JSON.parse(raw);
-      if (!parsed || !Array.isArray(parsed.cultos)) return { cultos: [] };
-      return parsed;
-    } catch (e) {
-      return { cultos: [] };
-    }
-  }
-  function saveState() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-    catch (e) { toast("Não foi possível salvar."); }
-  }
-  function uid() {
-    return "c_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
-  }
-  function toast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    clearTimeout(toast._t);
-    toast._t = setTimeout(() => t.classList.remove("show"), 1800);
-  }
-  function fmtDate(iso) {
-    if (!iso) return "";
-    const [y, m, d] = iso.split("-").map(Number);
-    const dt = new Date(y, m - 1, d);
-    const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-    const meses = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-    return diasSemana[dt.getDay()] + ", " + d + " de " + meses[dt.getMonth()] + " de " + y;
-  }
-  function escapeHtml(s) {
-    return String(s == null ? "" : s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
+const THEME_KEY = "cronograma-expansao-theme";
+const DEFAULT_MOMENTOS = [
+  { hora: "19:30", atividade: "Boas-vindas", responsavel: "" },
+  { hora: "19:35", atividade: "Louvor", responsavel: "" },
+  { hora: "20:00", atividade: "Avisos / Ofertório", responsavel: "" },
+  { hora: "20:10", atividade: "Mensagem", responsavel: "" },
+  { hora: "20:50", atividade: "Ministração / Oração", responsavel: "" },
+];
 
-  // ---------- Form: novo culto ----------
-  const form = document.getElementById("cultoForm");
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const data = document.getElementById("data").value;
-    const hora = document.getElementById("hora").value;
-    const tema = document.getElementById("tema").value.trim();
-    const pregador = document.getElementById("pregador").value.trim();
-    const dirigente = document.getElementById("dirigente").value.trim();
-    const obs = document.getElementById("obs").value.trim();
-    if (!data) { toast("Informe a data."); return; }
-    const culto = {
-      id: uid(),
-      data, hora, tema, pregador, dirigente, obs,
-      momentos: DEFAULT_MOMENTOS.map((m) => ({ id: uid(), ...m })),
-    };
-    state.cultos.push(culto);
-    saveState();
-    render();
-    form.reset();
-    document.getElementById("hora").value = "19:30";
-    toast("Culto adicionado.");
-  });
+let cultos = [];       // array de { ...culto, momentos: [] }
+let authMode = "login"; // or "signup"
+let realtimeChannel = null;
 
-  // ---------- Filtros ----------
-  const busca = document.getElementById("filtroBusca");
-  const mes = document.getElementById("filtroMes");
-  busca.addEventListener("input", render);
-  mes.addEventListener("change", render);
-  document.getElementById("limparFiltros").addEventListener("click", () => {
-    busca.value = ""; mes.value = ""; render();
-  });
+// ---------- helpers ----------
+function el(id) { return document.getElementById(id); }
+function toast(msg) {
+  const t = el("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function fmtDate(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+  const meses = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  return dias[dt.getDay()] + ", " + d + " de " + meses[dt.getMonth()] + " de " + y;
+}
+function setStatus(state, text) {
+  const dot = el("statusDot");
+  dot.classList.remove("online", "offline");
+  if (state === "online") dot.classList.add("online");
+  else if (state === "offline") dot.classList.add("offline");
+  el("statusText").textContent = text;
+}
 
-  // ---------- Export / Import ----------
-  document.getElementById("exportBtn").addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "cronograma-expansao-" + new Date().toISOString().slice(0, 10) + ".json";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-  document.getElementById("importBtn").addEventListener("click", () => {
-    document.getElementById("importFile").click();
-  });
-  document.getElementById("importFile").addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const data = JSON.parse(reader.result);
-        if (!data || !Array.isArray(data.cultos)) throw new Error("Formato inválido");
-        if (!confirm("Isso substituirá o cronograma atual. Continuar?")) return;
-        state = data;
-        saveState();
-        render();
-        toast("Importado com sucesso.");
-      } catch (err) {
-        toast("Arquivo inválido.");
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = "";
-  });
+// ---------- theme ----------
+function applyTheme(t) {
+  if (t) document.documentElement.setAttribute("data-theme", t);
+  else document.documentElement.removeAttribute("data-theme");
+}
+try { const saved = localStorage.getItem(THEME_KEY); if (saved) applyTheme(saved); } catch (e) {}
+el("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+  const next = !cur ? (prefersDark ? "light" : "dark") : (cur === "dark" ? "light" : "dark");
+  applyTheme(next);
+  try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+});
 
-  // ---------- Tema ----------
-  function applyTheme(t) {
-    if (t) document.documentElement.setAttribute("data-theme", t);
-    else document.documentElement.removeAttribute("data-theme");
-  }
+// ---------- auth UI ----------
+function updateAuthMode() {
+  const isLogin = authMode === "login";
+  el("modeHint").textContent = isLogin ? "Já tem conta? Faça login." : "Crie sua conta para acessar.";
+  el("loginSubmit").textContent = isLogin ? "Entrar" : "Criar conta";
+  el("swText").textContent = isLogin ? "Novo por aqui?" : "Já tem conta?";
+  el("swLink").textContent = isLogin ? "Criar conta" : "Entrar";
+  el("loginErr").hidden = true;
+}
+el("swLink").addEventListener("click", () => {
+  authMode = authMode === "login" ? "signup" : "login";
+  updateAuthMode();
+});
+el("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  el("loginErr").hidden = true;
+  el("loginSubmit").disabled = true;
+  const email = el("email").value.trim();
+  const senha = el("senha").value;
   try {
-    const saved = localStorage.getItem(THEME_KEY);
-    if (saved) applyTheme(saved);
-  } catch (e) {}
-  document.getElementById("themeBtn").addEventListener("click", () => {
-    const cur = document.documentElement.getAttribute("data-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    let next;
-    if (!cur) next = prefersDark ? "light" : "dark";
-    else if (cur === "dark") next = "light";
-    else next = "dark";
-    applyTheme(next);
-    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
-  });
-
-  // ---------- Delegação de ações ----------
-  document.getElementById("lista").addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-act]");
-    if (!btn) return;
-    const act = btn.dataset.act;
-    const cultoId = btn.dataset.culto;
-    const itemId = btn.dataset.item;
-    const culto = state.cultos.find((c) => c.id === cultoId);
-    if (!culto) return;
-
-    if (act === "del-culto") {
-      if (confirm("Remover este culto?")) {
-        state.cultos = state.cultos.filter((c) => c.id !== cultoId);
-        saveState(); render(); toast("Culto removido.");
+    if (authMode === "login") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+      if (error) throw error;
+    } else {
+      const { data, error } = await supabase.auth.signUp({ email, password: senha });
+      if (error) throw error;
+      if (!data.session) {
+        toast("Conta criada. Verifique seu e-mail para confirmar o acesso.");
+        authMode = "login"; updateAuthMode();
       }
-    } else if (act === "edit-culto") {
-      editCulto(culto);
-    } else if (act === "del-item") {
-      culto.momentos = culto.momentos.filter((m) => m.id !== itemId);
-      saveState(); render();
-    } else if (act === "edit-item") {
-      editItem(culto, itemId);
     }
-  });
-
-  document.getElementById("lista").addEventListener("submit", (e) => {
-    const form = e.target.closest("form[data-add-item]");
-    if (!form) return;
-    e.preventDefault();
-    const cultoId = form.dataset.addItem;
-    const culto = state.cultos.find((c) => c.id === cultoId);
-    if (!culto) return;
-    const hora = form.querySelector('[name="hora"]').value;
-    const atividade = form.querySelector('[name="atividade"]').value.trim();
-    const responsavel = form.querySelector('[name="responsavel"]').value.trim();
-    if (!atividade) { toast("Informe a atividade."); return; }
-    culto.momentos.push({ id: uid(), hora, atividade, responsavel });
-    culto.momentos.sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
-    saveState(); render();
-  });
-
-  function editCulto(culto) {
-    const tema = prompt("Tema do culto:", culto.tema || "");
-    if (tema === null) return;
-    const pregador = prompt("Pregador(a):", culto.pregador || "");
-    if (pregador === null) return;
-    const dirigente = prompt("Dirigente:", culto.dirigente || "");
-    if (dirigente === null) return;
-    const obs = prompt("Observações:", culto.obs || "");
-    if (obs === null) return;
-    culto.tema = tema.trim();
-    culto.pregador = pregador.trim();
-    culto.dirigente = dirigente.trim();
-    culto.obs = obs.trim();
-    saveState(); render();
+  } catch (err) {
+    el("loginErr").textContent = traduzErro(err?.message || String(err));
+    el("loginErr").hidden = false;
+  } finally {
+    el("loginSubmit").disabled = false;
   }
+});
+el("logoutBtn").addEventListener("click", async () => {
+  await supabase.auth.signOut();
+});
 
-  function editItem(culto, itemId) {
-    const item = culto.momentos.find((m) => m.id === itemId);
-    if (!item) return;
-    const hora = prompt("Horário (HH:MM):", item.hora || "");
-    if (hora === null) return;
-    const atividade = prompt("Atividade:", item.atividade || "");
-    if (atividade === null) return;
-    const responsavel = prompt("Responsável:", item.responsavel || "");
-    if (responsavel === null) return;
-    item.hora = hora.trim();
-    item.atividade = atividade.trim();
-    item.responsavel = responsavel.trim();
-    culto.momentos.sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
-    saveState(); render();
-  }
+function traduzErro(msg) {
+  const m = msg.toLowerCase();
+  if (m.includes("invalid login")) return "E-mail ou senha incorretos.";
+  if (m.includes("already registered")) return "Este e-mail já tem conta.";
+  if (m.includes("password should be")) return "A senha precisa ter pelo menos 6 caracteres.";
+  if (m.includes("email not confirmed")) return "Confirme seu e-mail antes de entrar.";
+  return msg;
+}
 
-  // ---------- Render ----------
-  function render() {
-    const lista = document.getElementById("lista");
-    const q = busca.value.trim().toLowerCase();
-    const mesVal = mes.value;
-
-    const cultos = [...state.cultos].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
-    const filtered = cultos.filter((c) => {
-      if (mesVal && !(c.data || "").startsWith(mesVal)) return false;
-      if (q) {
-        const hay = [
-          c.tema, c.pregador, c.dirigente, c.obs,
-          ...(c.momentos || []).flatMap((m) => [m.atividade, m.responsavel]),
-        ].join(" ").toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
-
-    if (filtered.length === 0) {
-      lista.innerHTML = '<div class="empty">Nenhum culto cadastrado ainda. Use o formulário acima para começar.</div>';
-      return;
-    }
-
-    lista.innerHTML = filtered.map(renderCulto).join("");
-  }
-
-  function renderCulto(c) {
-    const momentos = [...(c.momentos || [])].sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
-    const rows = momentos.length === 0
-      ? '<tr><td colspan="4" class="empty">Sem momentos cadastrados.</td></tr>'
-      : momentos.map((m) => `
-          <tr>
-            <td class="time">${escapeHtml(m.hora)}</td>
-            <td>${escapeHtml(m.atividade)}</td>
-            <td>${escapeHtml(m.responsavel) || '<span style="color:var(--muted)">—</span>'}</td>
-            <td class="act-col">
-              <button data-act="edit-item" data-culto="${c.id}" data-item="${m.id}">Editar</button>
-              <button data-act="del-item" data-culto="${c.id}" data-item="${m.id}" class="danger">Remover</button>
-            </td>
-          </tr>
-        `).join("");
-
-    const chips = [];
-    if (c.hora) chips.push(`<span class="chip">${escapeHtml(c.hora)}</span>`);
-    if (c.pregador) chips.push(`<span class="chip">Pregação: ${escapeHtml(c.pregador)}</span>`);
-    if (c.dirigente) chips.push(`<span class="chip">Dirigente: ${escapeHtml(c.dirigente)}</span>`);
-
-    return `
-      <div class="culto-group">
-        <div class="culto-head">
-          <div>
-            <div class="date">${escapeHtml(fmtDate(c.data))}</div>
-            <div class="meta">${escapeHtml(c.tema) || '<em>Sem tema</em>'}</div>
-          </div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;">${chips.join("")}</div>
-          <div class="right">
-            <button data-act="edit-culto" data-culto="${c.id}">Editar culto</button>
-            <button data-act="del-culto" data-culto="${c.id}" class="danger">Remover</button>
-          </div>
-        </div>
-        ${c.obs ? `<div style="padding:10px 14px; color:var(--muted); font-size:13px; border-bottom:1px solid var(--line);">${escapeHtml(c.obs)}</div>` : ""}
-        <table class="items">
-          <thead>
-            <tr><th>Hora</th><th>Atividade</th><th>Responsável</th><th></th></tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <details class="add-item">
-          <summary>+ Adicionar momento</summary>
-          <form data-add-item="${c.id}" class="inline-form">
-            <div class="grid">
-              <div class="field col-2">
-                <label>Horário</label>
-                <input type="time" name="hora" value="19:30" />
-              </div>
-              <div class="field col-6">
-                <label>Atividade</label>
-                <input type="text" name="atividade" placeholder="Ex: Louvor" required />
-              </div>
-              <div class="field col-4">
-                <label>Responsável</label>
-                <input type="text" name="responsavel" placeholder="Nome" />
-              </div>
-            </div>
-            <div class="form-footer">
-              <button type="submit" class="primary">Adicionar</button>
-            </div>
-          </form>
-        </details>
-      </div>
-    `;
-  }
-
-  // Default date = próximo domingo
-  (function initDefaultDate() {
-    const el = document.getElementById("data");
-    const today = new Date();
-    const diasAteDom = (7 - today.getDay()) % 7;
-    const prox = new Date(today);
-    prox.setDate(today.getDate() + (diasAteDom === 0 ? 7 : diasAteDom));
-    const y = prox.getFullYear();
-    const m = String(prox.getMonth() + 1).padStart(2, "0");
-    const d = String(prox.getDate()).padStart(2, "0");
-    el.value = `${y}-${m}-${d}`;
-  })();
-
-  render();
+// ---------- auth lifecycle ----------
+supabase.auth.onAuthStateChange((_event, session) => {
+  if (session?.user) showApp(session.user); else showLogin();
+});
+(async () => {
+  const { data } = await supabase.auth.getSession();
+  if (data.session?.user) showApp(data.session.user); else showLogin();
 })();
+
+function showLogin() {
+  el("appView").hidden = true;
+  el("loginView").hidden = false;
+  updateAuthMode();
+  teardownRealtime();
+  cultos = [];
+}
+async function showApp(user) {
+  el("loginView").hidden = true;
+  el("appView").hidden = false;
+  el("userLabel").textContent = user.email || "";
+  initDefaultDate();
+  await loadAll();
+  setupRealtime();
+}
+
+// ---------- data load ----------
+async function loadAll() {
+  setStatus("", "carregando…");
+  const { data: cs, error: e1 } = await supabase
+    .from("cultos").select("*").order("data", { ascending: true });
+  if (e1) { toast("Erro ao carregar cultos: " + e1.message); setStatus("offline", "erro"); return; }
+  const { data: ms, error: e2 } = await supabase
+    .from("momentos").select("*").order("hora", { ascending: true });
+  if (e2) { toast("Erro ao carregar momentos: " + e2.message); setStatus("offline", "erro"); return; }
+  const byCulto = {};
+  for (const m of ms || []) {
+    (byCulto[m.culto_id] = byCulto[m.culto_id] || []).push(m);
+  }
+  cultos = (cs || []).map((c) => ({ ...c, momentos: byCulto[c.id] || [] }));
+  setStatus("online", "sincronizado");
+  render();
+}
+
+// ---------- realtime ----------
+function setupRealtime() {
+  teardownRealtime();
+  realtimeChannel = supabase.channel("cronograma")
+    .on("postgres_changes", { event: "*", schema: "public", table: "cultos" }, handleCultoChange)
+    .on("postgres_changes", { event: "*", schema: "public", table: "momentos" }, handleMomentoChange)
+    .subscribe((status) => {
+      if (status === "SUBSCRIBED") setStatus("online", "sincronizado");
+      else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") setStatus("offline", "offline");
+    });
+}
+function teardownRealtime() {
+  if (realtimeChannel) { supabase.removeChannel(realtimeChannel); realtimeChannel = null; }
+}
+function handleCultoChange(payload) {
+  const { eventType, new: nw, old } = payload;
+  if (eventType === "INSERT") {
+    if (!cultos.find((c) => c.id === nw.id)) cultos.push({ ...nw, momentos: [] });
+  } else if (eventType === "UPDATE") {
+    const c = cultos.find((c) => c.id === nw.id);
+    if (c) Object.assign(c, nw);
+  } else if (eventType === "DELETE") {
+    cultos = cultos.filter((c) => c.id !== old.id);
+  }
+  render();
+}
+function handleMomentoChange(payload) {
+  const { eventType, new: nw, old } = payload;
+  if (eventType === "INSERT") {
+    const c = cultos.find((c) => c.id === nw.culto_id);
+    if (c && !c.momentos.find((m) => m.id === nw.id)) c.momentos.push(nw);
+  } else if (eventType === "UPDATE") {
+    const c = cultos.find((c) => c.id === nw.culto_id);
+    if (c) {
+      const i = c.momentos.findIndex((m) => m.id === nw.id);
+      if (i >= 0) c.momentos[i] = nw; else c.momentos.push(nw);
+    }
+  } else if (eventType === "DELETE") {
+    for (const c of cultos) c.momentos = c.momentos.filter((m) => m.id !== old.id);
+  }
+  render();
+}
+
+// ---------- form: novo culto ----------
+el("cultoForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const data = el("data").value;
+  if (!data) { toast("Informe a data."); return; }
+  const payload = {
+    data,
+    hora: el("hora").value,
+    tema: el("tema").value.trim(),
+    pregador: el("pregador").value.trim(),
+    dirigente: el("dirigente").value.trim(),
+    obs: el("obs").value.trim(),
+  };
+  el("addCultoBtn").disabled = true;
+  const { data: inserted, error } = await supabase
+    .from("cultos").insert(payload).select().single();
+  el("addCultoBtn").disabled = false;
+  if (error) { toast("Erro ao salvar: " + error.message); return; }
+
+  const momentos = DEFAULT_MOMENTOS.map((m, i) => ({ ...m, culto_id: inserted.id, ordem: i }));
+  const { error: me } = await supabase.from("momentos").insert(momentos);
+  if (me) toast("Culto salvo, mas falhou criar momentos: " + me.message);
+
+  el("cultoForm").reset();
+  el("hora").value = "19:30";
+  initDefaultDate();
+  toast("Culto adicionado.");
+});
+
+// ---------- filtros ----------
+el("filtroBusca").addEventListener("input", render);
+el("filtroMes").addEventListener("change", render);
+el("limparFiltros").addEventListener("click", () => {
+  el("filtroBusca").value = ""; el("filtroMes").value = ""; render();
+});
+
+// ---------- ações delegadas ----------
+el("lista").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-act]");
+  if (!btn) return;
+  const act = btn.dataset.act;
+  const cultoId = btn.dataset.culto;
+  const itemId = btn.dataset.item;
+  const culto = cultos.find((c) => c.id === cultoId);
+  if (!culto) return;
+
+  if (act === "del-culto") {
+    if (!confirm("Remover este culto?")) return;
+    const { error } = await supabase.from("cultos").delete().eq("id", cultoId);
+    if (error) toast("Erro: " + error.message); else toast("Culto removido.");
+  } else if (act === "edit-culto") {
+    await editCulto(culto);
+  } else if (act === "del-item") {
+    const { error } = await supabase.from("momentos").delete().eq("id", itemId);
+    if (error) toast("Erro: " + error.message);
+  } else if (act === "edit-item") {
+    await editItem(culto, itemId);
+  }
+});
+el("lista").addEventListener("submit", async (e) => {
+  const form = e.target.closest("form[data-add-item]");
+  if (!form) return;
+  e.preventDefault();
+  const cultoId = form.dataset.addItem;
+  const hora = form.querySelector('[name="hora"]').value;
+  const atividade = form.querySelector('[name="atividade"]').value.trim();
+  const responsavel = form.querySelector('[name="responsavel"]').value.trim();
+  if (!atividade) { toast("Informe a atividade."); return; }
+  const { error } = await supabase.from("momentos").insert({
+    culto_id: cultoId, hora, atividade, responsavel,
+  });
+  if (error) toast("Erro: " + error.message);
+  else form.reset();
+});
+
+async function editCulto(culto) {
+  const tema = prompt("Tema do culto:", culto.tema || ""); if (tema === null) return;
+  const pregador = prompt("Pregador(a):", culto.pregador || ""); if (pregador === null) return;
+  const dirigente = prompt("Dirigente:", culto.dirigente || ""); if (dirigente === null) return;
+  const obs = prompt("Observações:", culto.obs || ""); if (obs === null) return;
+  const { error } = await supabase.from("cultos").update({
+    tema: tema.trim(), pregador: pregador.trim(),
+    dirigente: dirigente.trim(), obs: obs.trim(),
+  }).eq("id", culto.id);
+  if (error) toast("Erro: " + error.message);
+}
+async function editItem(culto, itemId) {
+  const item = culto.momentos.find((m) => m.id === itemId);
+  if (!item) return;
+  const hora = prompt("Horário (HH:MM):", item.hora || ""); if (hora === null) return;
+  const atividade = prompt("Atividade:", item.atividade || ""); if (atividade === null) return;
+  const responsavel = prompt("Responsável:", item.responsavel || ""); if (responsavel === null) return;
+  const { error } = await supabase.from("momentos").update({
+    hora: hora.trim(), atividade: atividade.trim(), responsavel: responsavel.trim(),
+  }).eq("id", itemId);
+  if (error) toast("Erro: " + error.message);
+}
+
+// ---------- render ----------
+function render() {
+  const lista = el("lista");
+  const q = el("filtroBusca").value.trim().toLowerCase();
+  const mesVal = el("filtroMes").value;
+  const sorted = [...cultos].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
+  const filtered = sorted.filter((c) => {
+    if (mesVal && !(c.data || "").startsWith(mesVal)) return false;
+    if (q) {
+      const hay = [
+        c.tema, c.pregador, c.dirigente, c.obs,
+        ...(c.momentos || []).flatMap((m) => [m.atividade, m.responsavel]),
+      ].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  if (!filtered.length) {
+    lista.innerHTML = '<div class="empty">Nenhum culto cadastrado ainda. Use o formulário acima para começar.</div>';
+    return;
+  }
+  lista.innerHTML = filtered.map(renderCulto).join("");
+}
+function renderCulto(c) {
+  const momentos = [...(c.momentos || [])].sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
+  const rows = momentos.length === 0
+    ? '<tr><td colspan="4" class="empty">Sem momentos cadastrados.</td></tr>'
+    : momentos.map((m) => `
+        <tr>
+          <td class="time">${escapeHtml(m.hora)}</td>
+          <td>${escapeHtml(m.atividade)}</td>
+          <td>${escapeHtml(m.responsavel) || '<span style="color:var(--muted)">—</span>'}</td>
+          <td class="act-col">
+            <button data-act="edit-item" data-culto="${c.id}" data-item="${m.id}">Editar</button>
+            <button data-act="del-item" data-culto="${c.id}" data-item="${m.id}" class="danger">Remover</button>
+          </td>
+        </tr>
+      `).join("");
+  const chips = [];
+  if (c.hora) chips.push(`<span class="chip">${escapeHtml(c.hora)}</span>`);
+  if (c.pregador) chips.push(`<span class="chip">Pregação: ${escapeHtml(c.pregador)}</span>`);
+  if (c.dirigente) chips.push(`<span class="chip">Dirigente: ${escapeHtml(c.dirigente)}</span>`);
+  return `
+    <div class="culto-group">
+      <div class="culto-head">
+        <div>
+          <div class="date">${escapeHtml(fmtDate(c.data))}</div>
+          <div class="meta">${escapeHtml(c.tema) || '<em>Sem tema</em>'}</div>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">${chips.join("")}</div>
+        <div class="right">
+          <button data-act="edit-culto" data-culto="${c.id}">Editar culto</button>
+          <button data-act="del-culto" data-culto="${c.id}" class="danger">Remover</button>
+        </div>
+      </div>
+      ${c.obs ? `<div style="padding:10px 14px; color:var(--muted); font-size:13px; border-bottom:1px solid var(--line);">${escapeHtml(c.obs)}</div>` : ""}
+      <table class="items">
+        <thead><tr><th>Hora</th><th>Atividade</th><th>Responsável</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <details class="add-item">
+        <summary>+ Adicionar momento</summary>
+        <form data-add-item="${c.id}" class="inline-form">
+          <div class="grid">
+            <div class="field col-2">
+              <label>Horário</label>
+              <input type="time" name="hora" value="19:30" />
+            </div>
+            <div class="field col-6">
+              <label>Atividade</label>
+              <input type="text" name="atividade" placeholder="Ex: Louvor" required />
+            </div>
+            <div class="field col-4">
+              <label>Responsável</label>
+              <input type="text" name="responsavel" placeholder="Nome" />
+            </div>
+          </div>
+          <div class="form-footer">
+            <button type="submit" class="primary">Adicionar</button>
+          </div>
+        </form>
+      </details>
+    </div>
+  `;
+}
+
+function initDefaultDate() {
+  const elD = el("data");
+  const today = new Date();
+  const diasAteDom = (7 - today.getDay()) % 7;
+  const prox = new Date(today);
+  prox.setDate(today.getDate() + (diasAteDom === 0 ? 7 : diasAteDom));
+  const y = prox.getFullYear();
+  const m = String(prox.getMonth() + 1).padStart(2, "0");
+  const d = String(prox.getDate()).padStart(2, "0");
+  elD.value = `${y}-${m}-${d}`;
+}
 </script>
 </body>
 </html>
