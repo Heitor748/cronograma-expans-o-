@@ -279,11 +279,16 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 
 const THEME_KEY = "cronograma-expansao-theme";
 const DEFAULT_MOMENTOS = [
-  { hora: "19:30", atividade: "Boas-vindas", responsavel: "" },
-  { hora: "19:35", atividade: "Louvor", responsavel: "" },
-  { hora: "20:00", atividade: "Avisos / Ofertório", responsavel: "" },
-  { hora: "20:10", atividade: "Mensagem", responsavel: "" },
-  { hora: "20:50", atividade: "Ministração / Oração", responsavel: "" },
+  { hora: "18:30", hora_fim: "19:00", atividade: "Intercessão", responsavel: "" },
+  { hora: "19:00", hora_fim: "19:20", atividade: "Momento Adore", responsavel: "" },
+  { hora: "19:20", hora_fim: "19:25", atividade: "Palavra introdutória", responsavel: "" },
+  { hora: "19:25", hora_fim: "19:50", atividade: "Participação Individual", responsavel: "" },
+  { hora: "19:50", hora_fim: "19:55", atividade: "Boas-vindas e Ofertório", responsavel: "" },
+  { hora: "19:55", hora_fim: "20:00", atividade: "Expansão: Rei e Santo", responsavel: "" },
+  { hora: "20:00", hora_fim: "20:05", atividade: "Momento Fire", responsavel: "" },
+  { hora: "20:05", hora_fim: "21:10", atividade: "Momento da Palavra e Apelo", responsavel: "" },
+  { hora: "21:10", hora_fim: "21:15", atividade: "Considerações Finais", responsavel: "" },
+  { hora: "21:15", hora_fim: "",      atividade: "Último louvor", responsavel: "" },
 ];
 
 let cultos = [];       // array de { ...culto, momentos: [] }
@@ -350,25 +355,12 @@ el("loginForm").addEventListener("submit", async (e) => {
   const email = el("email").value.trim();
   const senha = el("senha").value;
   try {
-    const dbg = (m) => {
-      const d = el("loginErr");
-      d.hidden = false;
-      d.style.color = "var(--muted)";
-      d.textContent = m;
-    };
     if (authMode === "login") {
-      dbg("Enviando login...");
       const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
       if (error) throw error;
-      dbg("Resposta OK. session=" + !!data?.session + " user=" + !!data?.user);
       const u = data?.session?.user || data?.user;
-      if (u) {
-        dbg("Abrindo app...");
-        try { await showApp(u); dbg("App aberto."); } catch(e){ dbg("Erro showApp: " + (e?.message||e)); }
-        return;
-      }
-      dbg("Sem user no retorno. Recarregando...");
-      setTimeout(() => location.reload(), 500);
+      if (u) { await showApp(u); return; }
+      setTimeout(() => location.reload(), 300);
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password: senha });
       if (error) throw error;
@@ -509,7 +501,12 @@ el("cultoForm").addEventListener("submit", async (e) => {
   el("addCultoBtn").disabled = false;
   if (error) { toast("Erro ao salvar: " + error.message); return; }
 
-  const momentos = DEFAULT_MOMENTOS.map((m, i) => ({ ...m, culto_id: inserted.id, ordem: i }));
+  const momentos = DEFAULT_MOMENTOS.map((m, i) => ({
+    culto_id: inserted.id,
+    hora: m.hora, hora_fim: m.hora_fim || null,
+    atividade: m.atividade, responsavel: m.responsavel || "",
+    ordem: i,
+  }));
   const { error: me } = await supabase.from("momentos").insert(momentos);
   if (me) toast("Culto salvo, mas falhou criar momentos: " + me.message);
 
@@ -555,11 +552,12 @@ el("lista").addEventListener("submit", async (e) => {
   e.preventDefault();
   const cultoId = form.dataset.addItem;
   const hora = form.querySelector('[name="hora"]').value;
+  const hora_fim = form.querySelector('[name="hora_fim"]').value || null;
   const atividade = form.querySelector('[name="atividade"]').value.trim();
   const responsavel = form.querySelector('[name="responsavel"]').value.trim();
   if (!atividade) { toast("Informe a atividade."); return; }
   const { error } = await supabase.from("momentos").insert({
-    culto_id: cultoId, hora, atividade, responsavel,
+    culto_id: cultoId, hora, hora_fim, atividade, responsavel,
   });
   if (error) toast("Erro: " + error.message);
   else form.reset();
@@ -579,11 +577,15 @@ async function editCulto(culto) {
 async function editItem(culto, itemId) {
   const item = culto.momentos.find((m) => m.id === itemId);
   if (!item) return;
-  const hora = prompt("Horário (HH:MM):", item.hora || ""); if (hora === null) return;
+  const hora = prompt("Horário de início (HH:MM):", item.hora || ""); if (hora === null) return;
+  const hora_fim = prompt("Horário de fim (HH:MM) — deixe em branco se não houver:", item.hora_fim || ""); if (hora_fim === null) return;
   const atividade = prompt("Atividade:", item.atividade || ""); if (atividade === null) return;
-  const responsavel = prompt("Responsável:", item.responsavel || ""); if (responsavel === null) return;
+  const responsavel = prompt("Responsável(is) — separe por vírgula ou linha:", item.responsavel || ""); if (responsavel === null) return;
   const { error } = await supabase.from("momentos").update({
-    hora: hora.trim(), atividade: atividade.trim(), responsavel: responsavel.trim(),
+    hora: hora.trim(),
+    hora_fim: hora_fim.trim() || null,
+    atividade: atividade.trim(),
+    responsavel: responsavel.trim(),
   }).eq("id", itemId);
   if (error) toast("Erro: " + error.message);
 }
@@ -615,17 +617,24 @@ function renderCulto(c) {
   const momentos = [...(c.momentos || [])].sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
   const rows = momentos.length === 0
     ? '<tr><td colspan="4" class="empty">Sem momentos cadastrados.</td></tr>'
-    : momentos.map((m) => `
+    : momentos.map((m) => {
+        const faixa = m.hora_fim ? `${escapeHtml(m.hora)} – ${escapeHtml(m.hora_fim)}` : escapeHtml(m.hora);
+        const resp = (m.responsavel || "").trim();
+        const respHtml = resp
+          ? escapeHtml(resp).split(/\r?\n|,\s*/).filter(Boolean)
+              .map((r) => `<div>→ ${r}</div>`).join("")
+          : '<span style="color:var(--muted)">—</span>';
+        return `
         <tr>
-          <td class="time">${escapeHtml(m.hora)}</td>
+          <td class="time">${faixa}</td>
           <td>${escapeHtml(m.atividade)}</td>
-          <td>${escapeHtml(m.responsavel) || '<span style="color:var(--muted)">—</span>'}</td>
+          <td>${respHtml}</td>
           <td class="act-col">
             <button data-act="edit-item" data-culto="${c.id}" data-item="${m.id}">Editar</button>
             <button data-act="del-item" data-culto="${c.id}" data-item="${m.id}" class="danger">Remover</button>
           </td>
-        </tr>
-      `).join("");
+        </tr>`;
+      }).join("");
   const chips = [];
   if (c.hora) chips.push(`<span class="chip">${escapeHtml(c.hora)}</span>`);
   if (c.pregador) chips.push(`<span class="chip">Pregação: ${escapeHtml(c.pregador)}</span>`);
@@ -653,16 +662,20 @@ function renderCulto(c) {
         <form data-add-item="${c.id}" class="inline-form">
           <div class="grid">
             <div class="field col-2">
-              <label>Horário</label>
+              <label>Início</label>
               <input type="time" name="hora" value="19:30" />
             </div>
-            <div class="field col-6">
-              <label>Atividade</label>
-              <input type="text" name="atividade" placeholder="Ex: Louvor" required />
+            <div class="field col-2">
+              <label>Fim</label>
+              <input type="time" name="hora_fim" />
             </div>
             <div class="field col-4">
-              <label>Responsável</label>
-              <input type="text" name="responsavel" placeholder="Nome" />
+              <label>Atividade</label>
+              <input type="text" name="atividade" placeholder="Ex: Momento Adore" required />
+            </div>
+            <div class="field col-4">
+              <label>Responsável(is)</label>
+              <textarea name="responsavel" rows="1" placeholder="Nome (pode ter vários, separados por vírgula ou linha)"></textarea>
             </div>
           </div>
           <div class="form-footer">
