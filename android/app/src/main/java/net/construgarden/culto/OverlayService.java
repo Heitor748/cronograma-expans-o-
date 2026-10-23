@@ -58,25 +58,29 @@ public class OverlayService extends Service {
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
-        String action = intent != null ? intent.getAction() : ACTION_START;
-        if (ACTION_STOP.equals(action)) { stopEverything(); return START_NOT_STICKY; }
+        try {
+            String action = intent != null ? intent.getAction() : ACTION_START;
+            if (ACTION_STOP.equals(action)) { stopEverything(); return START_NOT_STICKY; }
 
-        if (!running) {
-            running = true;
-            android.app.Notification n = buildNotification("Cronograma ao vivo", "Preparando...");
-            try {
-                if (Build.VERSION.SDK_INT >= 30) {
-                    startForeground(NOTIF_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
-                } else {
-                    startForeground(NOTIF_ID, n);
+            if (!running) {
+                running = true;
+                android.app.Notification n = buildNotification("Cronograma ao vivo", "Preparando...");
+                try {
+                    if (Build.VERSION.SDK_INT >= 30) {
+                        startForeground(NOTIF_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+                    } else {
+                        startForeground(NOTIF_ID, n);
+                    }
+                } catch (Throwable t) {
+                    try { startForeground(NOTIF_ID, n); } catch (Throwable ignored) {}
                 }
-            } catch (Throwable t) {
-                try { startForeground(NOTIF_ID, n); } catch (Throwable ignored) {}
+                try { attachBubble(); } catch (Throwable ignored) {}
+                try { scheduleTicks(); } catch (Throwable ignored) {}
             }
-            attachBubble();
-            scheduleTicks();
+            try { tick(); } catch (Throwable ignored) {}
+        } catch (Throwable t) {
+            CrashLog.save(getApplicationContext(), "OverlayService.onStartCommand", t);
         }
-        tick();
         return START_STICKY;
     }
 

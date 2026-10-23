@@ -17,18 +17,22 @@ public class JsBridge {
     @JavascriptInterface
     public void setSchedule(String json) {
         Schedule.save(ctx, json);
-        // Avisa o serviço (se estiver rodando) pra refazer o snapshot.
-        Intent i = new Intent(ctx, OverlayService.class);
-        i.setAction(OverlayService.ACTION_TICK);
-        ctx.startService(i);
+        pokeIfRunning();
     }
 
     @JavascriptInterface
     public void setNome(String nome) {
         Schedule.saveNome(ctx, nome);
-        Intent i = new Intent(ctx, OverlayService.class);
-        i.setAction(OverlayService.ACTION_TICK);
-        ctx.startService(i);
+        pokeIfRunning();
+    }
+
+    private void pokeIfRunning() {
+        if (!OverlayService.isRunning()) return;
+        try {
+            Intent i = new Intent(ctx, OverlayService.class);
+            i.setAction(OverlayService.ACTION_TICK);
+            ctx.startService(i);
+        } catch (Throwable ignored) {}
     }
 
     @JavascriptInterface
@@ -43,10 +47,12 @@ public class JsBridge {
 
     @JavascriptInterface
     public void startOverlay() {
-        Intent i = new Intent(ctx, OverlayService.class);
-        i.setAction(OverlayService.ACTION_START);
-        if (android.os.Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i);
-        else ctx.startService(i);
+        try {
+            Intent i = new Intent(ctx, OverlayService.class);
+            i.setAction(OverlayService.ACTION_START);
+            if (android.os.Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i);
+            else ctx.startService(i);
+        } catch (Throwable ignored) {}
     }
 
     @JavascriptInterface
@@ -72,4 +78,10 @@ public class JsBridge {
 
     @JavascriptInterface
     public String platform() { return "android-native"; }
+
+    @JavascriptInterface
+    public String getCrashLog() { return CrashLog.read(ctx); }
+
+    @JavascriptInterface
+    public void clearCrashLog() { CrashLog.clear(ctx); }
 }

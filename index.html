@@ -262,6 +262,7 @@
       <button id="nomeBtn" title="Meu nome no cronograma">Meu nome</button>
       <button id="notifBtn" title="Notificações" hidden>Ativar avisos</button>
       <button id="bubbleBtn" title="Bolha flutuante" hidden>Bolha</button>
+      <button id="diagBtn" title="Diagnóstico" hidden>Diag</button>
       <button id="themeBtn" class="theme-toggle" title="Alternar tema">Tema</button>
       <button id="logoutBtn">Sair</button>
     </div>
@@ -871,6 +872,23 @@ function updateBubbleButton() {
   const on = (() => { try { return !!Native.isOverlayActive(); } catch (e) { return false; } })();
   b.textContent = on ? "Bolha ativa" : "Ativar bolha";
 }
+el("diagBtn").hidden = !Native;
+el("diagBtn").addEventListener("click", () => {
+  let log = "";
+  try { log = Native.getCrashLog() || ""; } catch (e) { log = "(sem log)"; }
+  openModal(`
+    <h3>Diagnóstico</h3>
+    <p class="hint" style="margin:0 0 8px">Último crash registrado:</p>
+    <form>
+      <textarea rows="14" style="width:100%; font-family:monospace; font-size:11px;" readonly>${escapeHtml(log || "(nenhum crash)")}</textarea>
+      <div class="form-footer">
+        <button type="button" data-cancel>Fechar</button>
+        <button type="submit" class="primary">Limpar log</button>
+      </div>
+    </form>
+  `, () => { try { Native.clearCrashLog(); } catch (e) {} toast("Log limpo."); });
+});
+
 el("bubbleBtn").addEventListener("click", () => {
   if (!Native) return;
   const on = (() => { try { return !!Native.isOverlayActive(); } catch (e) { return false; } })();
