@@ -2,8 +2,16 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Cronograma Culto Expansão</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#4b5bd6" />
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Culto Expansão" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
   :root {
     --bg: #f6f7fb;
@@ -137,6 +145,37 @@
   .theme-toggle { font-size: 13px; }
   .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
+  /* Live banner */
+  .live {
+    position: sticky; top: 0; z-index: 20;
+    margin: -24px -16px 16px; padding: 14px 16px calc(14px + env(safe-area-inset-top));
+    background: linear-gradient(135deg, #4b5bd6, #3a46b8);
+    color: #fff;
+    border-radius: 0 0 14px 14px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+  .live.hidden-live { display: none; }
+  .live .row { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .live .label {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    opacity: 0.75; font-weight: 700;
+  }
+  .live .title { font-size: 18px; font-weight: 700; line-height: 1.2; }
+  .live .meta { font-size: 13px; opacity: 0.9; }
+  .live .resp { margin-top: 6px; font-size: 14px; }
+  .live .resp div { opacity: 0.95; }
+  .live .divider { height: 1px; background: rgba(255,255,255,0.2); margin: 10px 0; }
+  .live .next .title { font-size: 15px; }
+  .live .highlight {
+    display: inline-block; background: #ffd84a; color: #1a1a1a;
+    padding: 4px 10px; border-radius: 999px; font-weight: 700;
+    font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .live .corner {
+    position: absolute; top: 10px; right: 10px; opacity: 0.6; font-size: 11px;
+  }
+
   /* Modal */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.5);
@@ -209,6 +248,7 @@
 
 <!-- APP -->
 <div id="appView" class="wrap" hidden>
+  <div id="liveBanner" class="live hidden-live"></div>
   <header>
     <div>
       <h1>Cronograma — Culto Expansão</h1>
@@ -219,6 +259,8 @@
     </div>
     <div class="actions">
       <span class="user" id="userLabel"></span>
+      <button id="nomeBtn" title="Meu nome no cronograma">Meu nome</button>
+      <button id="notifBtn" title="Notificações" hidden>Ativar avisos</button>
       <button id="themeBtn" class="theme-toggle" title="Alternar tema">Tema</button>
       <button id="logoutBtn">Sair</button>
     </div>
@@ -293,6 +335,16 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 });
 
 const THEME_KEY = "cronograma-expansao-theme";
+const NAME_KEY  = "cronograma-expansao-nome";
+let meuNome = (localStorage.getItem(NAME_KEY) || "").trim();
+
+// --- PWA: service worker ---
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
 const DEFAULT_MOMENTOS = [
   { hora: "18:30", hora_fim: "19:00", atividade: "Intercessão", responsavel: "" },
   { hora: "19:00", hora_fim: "19:20", atividade: "Momento Adore", responsavel: "" },
@@ -431,9 +483,12 @@ async function showApp(user) {
   login.hidden = true; login.style.display = "none";
   app.hidden = false; app.style.display = "";
   el("userLabel").textContent = user.email || "";
+  updateNotifButton();
   initDefaultDate();
   await loadAll();
   setupRealtime();
+  startLiveTick();
+  if (!meuNome) setTimeout(abrirMeuNome, 400);
 }
 
 // ---------- data load ----------
@@ -677,9 +732,11 @@ function render() {
   });
   if (!filtered.length) {
     lista.innerHTML = '<div class="empty">Nenhum culto cadastrado ainda. Use o formulário acima para começar.</div>';
-    return;
+  } else {
+    lista.innerHTML = filtered.map(renderCulto).join("");
   }
-  lista.innerHTML = filtered.map(renderCulto).join("");
+  renderLive();
+  scheduleAllNotifs();
 }
 function renderCulto(c) {
   const momentos = [...(c.momentos || [])].sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
@@ -753,6 +810,253 @@ function renderCulto(c) {
       </details>
     </div>
   `;
+}
+
+// ================= Meu nome =================
+el("nomeBtn").addEventListener("click", abrirMeuNome);
+function abrirMeuNome() {
+  openModal(`
+    <h3>Meu nome no cronograma</h3>
+    <p class="hint" style="margin:0 0 10px">
+      Escreva o nome como ele aparece (ou aparecerá) no campo "Responsável(is)". Pode usar só o primeiro nome.
+      Isso é usado pra te avisar quando o seu momento está chegando.
+    </p>
+    <form>
+      <div class="field">
+        <label>Seu nome</label>
+        <input type="text" name="nome" value="${escapeHtml(meuNome)}" placeholder="Ex: Heitor" autofocus />
+      </div>
+      <div class="form-footer">
+        <button type="button" data-cancel>Cancelar</button>
+        <button type="submit" class="primary">Salvar</button>
+      </div>
+    </form>
+  `, (fd) => {
+    meuNome = fd.nome.trim();
+    try { localStorage.setItem(NAME_KEY, meuNome); } catch (e) {}
+    toast(meuNome ? ("Nome salvo: " + meuNome) : "Nome removido.");
+    renderLive();
+    scheduleAllNotifs();
+  });
+}
+
+// ================= Notificações =================
+const notifState = {
+  timers: [], // ids de setTimeout
+  perm: typeof Notification !== "undefined" ? Notification.permission : "unsupported",
+};
+function updateNotifButton() {
+  const b = el("notifBtn");
+  if (typeof Notification === "undefined") { b.hidden = true; return; }
+  if (notifState.perm === "granted") { b.hidden = true; return; }
+  b.hidden = false;
+  b.textContent = notifState.perm === "denied" ? "Avisos bloqueados" : "Ativar avisos";
+  b.disabled = notifState.perm === "denied";
+}
+el("notifBtn").addEventListener("click", async () => {
+  if (typeof Notification === "undefined") return;
+  try {
+    const p = await Notification.requestPermission();
+    notifState.perm = p;
+    updateNotifButton();
+    if (p === "granted") {
+      toast("Avisos ativados.");
+      scheduleAllNotifs();
+    }
+  } catch (e) { toast("Não foi possível ativar."); }
+});
+
+function clearNotifs() {
+  for (const t of notifState.timers) clearTimeout(t);
+  notifState.timers = [];
+}
+function fireLocal(title, body, tag) {
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  try {
+    if (navigator.serviceWorker?.controller && "showNotification" in ServiceWorkerRegistration.prototype) {
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.showNotification(title, { body, tag, icon: "icon-192.png", badge: "icon-192.png" });
+      });
+    } else {
+      new Notification(title, { body, tag, icon: "icon-192.png" });
+    }
+  } catch (e) {}
+}
+function scheduleAllNotifs() {
+  clearNotifs();
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const now = Date.now();
+  for (const c of cultos) {
+    for (const m of (c.momentos || [])) {
+      const start = momentoStart(c, m);
+      if (!start) continue;
+      const dt = start.getTime();
+      if (dt < now) continue;
+      const isMine = nomeMatchesResponsavel(meuNome, m.responsavel);
+      const atv = m.atividade || "Momento";
+      const horaStr = hhmm(start);
+      // 2 min antes
+      const pre = dt - 2 * 60 * 1000;
+      if (pre > now) {
+        const id1 = setTimeout(() => {
+          fireLocal(
+            isMine ? "⚡ Você é o próximo!" : "Próximo momento em 2 min",
+            `${horaStr} • ${atv}` + (m.responsavel ? ` — ${primeiroResp(m.responsavel)}` : ""),
+            "pre-" + m.id
+          );
+        }, pre - now);
+        notifState.timers.push(id1);
+      }
+      // No início
+      const id2 = setTimeout(() => {
+        fireLocal(
+          isMine ? "⚡ É agora: " + atv : "Começou: " + atv,
+          horaStr + (m.responsavel ? ` — ${primeiroResp(m.responsavel)}` : ""),
+          "start-" + m.id
+        );
+      }, dt - now);
+      notifState.timers.push(id2);
+    }
+  }
+}
+
+// ================= Live banner =================
+let liveTimer = null;
+function startLiveTick() {
+  if (liveTimer) clearInterval(liveTimer);
+  renderLive();
+  liveTimer = setInterval(renderLive, 15000);
+}
+function momentoStart(c, m) {
+  if (!c?.data || !m?.hora) return null;
+  const [y, mo, d] = c.data.split("-").map(Number);
+  const [hh, mm] = (m.hora || "").split(":").map(Number);
+  if ([y, mo, d, hh, mm].some((v) => Number.isNaN(v))) return null;
+  return new Date(y, mo - 1, d, hh, mm, 0);
+}
+function momentoEnd(c, m, next) {
+  if (m.hora_fim) {
+    const [y, mo, d] = c.data.split("-").map(Number);
+    const [hh, mm] = m.hora_fim.split(":").map(Number);
+    if (![y, mo, d, hh, mm].some(Number.isNaN)) return new Date(y, mo - 1, d, hh, mm, 0);
+  }
+  if (next) return momentoStart(c, next);
+  const s = momentoStart(c, m);
+  return s ? new Date(s.getTime() + 30 * 60 * 1000) : null;
+}
+function hhmm(d) {
+  if (!d) return "";
+  return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+}
+function nomeMatchesResponsavel(nome, resp) {
+  if (!nome || !resp) return false;
+  const n = nome.toLowerCase();
+  return resp.toLowerCase().split(/\r?\n|,/).some((p) => p.trim().includes(n));
+}
+function primeiroResp(resp) {
+  return (resp || "").split(/\r?\n|,/)[0].trim();
+}
+function pickCultoAtivo() {
+  if (!cultos.length) return null;
+  const now = Date.now();
+  const sorted = [...cultos].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
+  for (const c of sorted) {
+    const ms = (c.momentos || []).map((m) => momentoStart(c, m)).filter(Boolean);
+    if (!ms.length) continue;
+    const first = Math.min(...ms.map((d) => d.getTime()));
+    const last = Math.max(...ms.map((d) => d.getTime())) + 60 * 60 * 1000;
+    if (now < last) return c;
+    // já passou — tenta próximo
+  }
+  return null;
+}
+function renderLive() {
+  const bn = el("liveBanner");
+  const c = pickCultoAtivo();
+  if (!c) { bn.classList.add("hidden-live"); return; }
+  const now = new Date();
+  const momentos = [...(c.momentos || [])]
+    .map((m) => ({ m, s: momentoStart(c, m) }))
+    .filter((x) => x.s)
+    .sort((a, b) => a.s - b.s);
+  if (!momentos.length) { bn.classList.add("hidden-live"); return; }
+
+  const firstStart = momentos[0].s;
+  const lastStart = momentos[momentos.length - 1].s;
+  const culto_fim = new Date(lastStart.getTime() + 60 * 60 * 1000);
+
+  let state = "antes", agoraIdx = -1;
+  if (now >= firstStart && now <= culto_fim) {
+    for (let i = 0; i < momentos.length; i++) {
+      const next = momentos[i + 1]?.s;
+      const end = momentoEnd(c, momentos[i].m, momentos[i + 1]?.m);
+      if (now >= momentos[i].s && (next ? now < next : now <= end)) {
+        agoraIdx = i; state = "agora"; break;
+      }
+    }
+    if (agoraIdx === -1) state = "entre";
+  } else if (now > culto_fim) {
+    state = "depois";
+  }
+
+  const proxIdx = agoraIdx >= 0
+    ? agoraIdx + 1
+    : momentos.findIndex((x) => x.s > now);
+  const prox = proxIdx >= 0 && proxIdx < momentos.length ? momentos[proxIdx] : null;
+
+  const header = `
+    <div class="corner">${escapeHtml(fmtDate(c.data))}${c.tema ? " · " + escapeHtml(c.tema) : ""}</div>
+  `;
+
+  let html = header;
+
+  if (state === "antes") {
+    const diff = momentos[0].s - now;
+    const totMin = Math.ceil(diff / 60000);
+    const h = Math.floor(totMin / 60);
+    const mm = totMin % 60;
+    const tempo = h > 0 ? `${h}h ${mm}min` : `${mm}min`;
+    html += `
+      <div class="label">Próximo culto começa em</div>
+      <div class="title">${tempo}</div>
+      <div class="meta">${hhmm(momentos[0].s)} — ${escapeHtml(momentos[0].m.atividade)}</div>
+    `;
+  } else if (state === "depois") {
+    html += `<div class="label">Culto encerrado</div><div class="title">Até o próximo! 🙌</div>`;
+  } else if (state === "agora" || state === "entre") {
+    if (state === "agora") {
+      const m = momentos[agoraIdx].m;
+      const s = momentos[agoraIdx].s;
+      const end = momentoEnd(c, m, momentos[agoraIdx + 1]?.m);
+      const faixa = `${hhmm(s)}${end ? " – " + hhmm(end) : ""}`;
+      const mine = nomeMatchesResponsavel(meuNome, m.responsavel);
+      html += `
+        <div class="label">⏱️ Agora</div>
+        <div class="row"><div class="title">${escapeHtml(m.atividade)}</div><div class="meta">${faixa}</div></div>
+        ${m.responsavel ? `<div class="resp">${renderResp(m.responsavel)}</div>` : ""}
+        ${mine ? `<div class="highlight">⚡ Você está nesse momento</div>` : ""}
+      `;
+    } else {
+      html += `<div class="label">Intervalo</div><div class="title">Aguardando próximo momento</div>`;
+    }
+    if (prox) {
+      const diffMin = Math.max(0, Math.round((prox.s - now) / 60000));
+      const mine = nomeMatchesResponsavel(meuNome, prox.m.responsavel);
+      html += `<div class="divider"></div>
+        <div class="next">
+          <div class="label">A seguir ${diffMin > 0 ? "em " + diffMin + " min" : ""}</div>
+          <div class="row"><div class="title">${escapeHtml(prox.m.atividade)}</div><div class="meta">${hhmm(prox.s)}</div></div>
+          ${prox.m.responsavel ? `<div class="resp">${renderResp(prox.m.responsavel)}</div>` : ""}
+          ${mine ? `<div class="highlight">⚡ Você é o próximo</div>` : ""}
+        </div>`;
+    }
+  }
+
+  bn.innerHTML = html;
+  bn.classList.remove("hidden-live");
+}
+function renderResp(resp) {
+  return escapeHtml(resp).split(/\r?\n|,\s*/).filter(Boolean).map((r) => `<div>→ ${r}</div>`).join("");
 }
 
 function initDefaultDate() {
