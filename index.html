@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cronograma Culto Expansão</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --panel: #ffffff;
+    --ink: #15192b;
+    --muted: #5c6378;
+    --line: #e5e8f0;
+    --accent: #4b5bd6;
+    --accent-ink: #ffffff;
+    --danger: #c0362c;
+    --ok: #1f8a4c;
+    --chip: #eef0fb;
+    --row-alt: #fafbff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1220;
+      --panel: #171a2b;
+      --ink: #eef0fa;
+      --muted: #9aa1b8;
+      --line: #272b40;
+      --accent: #8792ff;
+      --accent-ink: #0f1220;
+      --danger: #ff8378;
+      --ok: #67d49a;
+      --chip: #222642;
+      --row-alt: #1b1f33;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1220;
+    --panel: #171a2b;
+    --ink: #eef0fa;
+    --muted: #9aa1b8;
+    --line: #272b40;
+    --accent: #8792ff;
+    --accent-ink: #0f1220;
+    --danger: #ff8378;
+    --ok: #67d49a;
+    --chip: #222642;
+    --row-alt: #1b1f33;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.45;
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  header .sub {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  button, .btn {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button:hover, .btn:hover { border-color: var(--accent); }
+  button.primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  button.danger {
+    color: var(--danger);
+    border-color: var(--line);
+    background: transparent;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .panel h2 {
+    font-size: 15px;
+    margin: 0 0 12px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 10px;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  input, select, textarea {
+    font: inherit;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 8px 10px;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 36px; }
+  .col-2 { grid-column: span 2; }
+  .col-3 { grid-column: span 3; }
+  .col-4 { grid-column: span 4; }
+  .col-6 { grid-column: span 6; }
+  .col-12 { grid-column: span 12; }
+  @media (max-width: 720px) {
+    .col-2, .col-3, .col-4, .col-6 { grid-column: span 12; }
+  }
+  .form-footer {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+  .filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: end;
+    margin-bottom: 10px;
+  }
+  .filters .field { flex: 1 1 160px; }
+  .chip {
+    display: inline-block;
+    background: var(--chip);
+    color: var(--ink);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+  }
+  .culto-group {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    background: var(--panel);
+  }
+  .culto-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--row-alt);
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .culto-head .date {
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .culto-head .meta { color: var(--muted); font-size: 13px; }
+  .culto-head .right { margin-left: auto; display: flex; gap: 6px; }
+  table.items {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  table.items th, table.items td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table.items th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    font-weight: 600;
+    background: transparent;
+  }
+  table.items tr:last-child td { border-bottom: none; }
+  table.items .time { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); width: 70px; }
+  table.items .act-col { width: 1%; white-space: nowrap; }
+  table.items .act-col button { padding: 4px 8px; font-size: 12px; }
+  .empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  details.add-item {
+    padding: 10px 14px;
+    border-top: 1px solid var(--line);
+    background: var(--row-alt);
+  }
+  details.add-item summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--accent);
+    user-select: none;
+  }
+  details.add-item[open] summary { margin-bottom: 10px; }
+  .inline-form .grid { gap: 8px; }
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity .2s;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .toast.show { opacity: 1; }
+  .theme-toggle { font-size: 13px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Cronograma — Culto Expansão</h1>
+      <div class="sub">Organize cada culto por data, responsáveis e momentos.</div>
+    </div>
+    <div class="actions">
+      <button id="exportBtn" title="Exportar JSON">Exportar</button>
+      <button id="importBtn" title="Importar JSON">Importar</button>
+      <input type="file" id="importFile" accept="application/json" hidden />
+      <button id="themeBtn" class="theme-toggle" title="Alternar tema">Tema</button>
+    </div>
+  </header>
+
+  <section class="panel">
+    <h2>Novo culto</h2>
+    <form id="cultoForm">
+      <div class="grid">
+        <div class="field col-3">
+          <label for="data">Data</label>
+          <input type="date" id="data" required />
+        </div>
+        <div class="field col-2">
+          <label for="hora">Horário</label>
+          <input type="time" id="hora" value="19:30" />
+        </div>
+        <div class="field col-3">
+          <label for="tema">Tema / Título</label>
+          <input type="text" id="tema" placeholder="Ex: Avivamento" />
+        </div>
+        <div class="field col-2">
+          <label for="pregador">Pregador(a)</label>
+          <input type="text" id="pregador" placeholder="Nome" />
+        </div>
+        <div class="field col-2">
+          <label for="dirigente">Dirigente</label>
+          <input type="text" id="dirigente" placeholder="Nome" />
+        </div>
+        <div class="field col-12">
+          <label for="obs">Observações</label>
+          <textarea id="obs" rows="2" placeholder="Informações gerais do culto"></textarea>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button type="reset">Limpar</button>
+        <button type="submit" class="primary">Adicionar culto</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="filters">
+      <div class="field">
+        <label for="filtroBusca">Buscar</label>
+        <input type="search" id="filtroBusca" placeholder="Tema, pregador, responsável..." />
+      </div>
+      <div class="field">
+        <label for="filtroMes">Mês</label>
+        <input type="month" id="filtroMes" />
+      </div>
+      <div class="field" style="flex: 0 0 auto;">
+        <label>&nbsp;</label>
+        <button id="limparFiltros" type="button">Limpar filtros</button>
+      </div>
+    </div>
+    <div id="lista"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Sobre</h2>
+    <p style="margin: 0; color: var(--muted); font-size: 14px;">
+      Os dados ficam salvos neste navegador (localStorage). Use <strong>Exportar</strong> para fazer backup
+      ou compartilhar com a equipe, e <strong>Importar</strong> para carregar um arquivo.
+    </p>
+  </section>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function () {
+  const STORAGE_KEY = "cronograma-expansao-v1";
+  const THEME_KEY = "cronograma-expansao-theme";
+
+  const DEFAULT_MOMENTOS = [
+    { hora: "19:30", atividade: "Boas-vindas", responsavel: "" },
+    { hora: "19:35", atividade: "Louvor", responsavel: "" },
+    { hora: "20:00", atividade: "Avisos / Ofertório", responsavel: "" },
+    { hora: "20:10", atividade: "Mensagem", responsavel: "" },
+    { hora: "20:50", atividade: "Ministração / Oração", responsavel: "" },
+  ];
+
+  let state = loadState();
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { cultos: [] };
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.cultos)) return { cultos: [] };
+      return parsed;
+    } catch (e) {
+      return { cultos: [] };
+    }
+  }
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch (e) { toast("Não foi possível salvar."); }
+  }
+  function uid() {
+    return "c_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  }
+  function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+  function fmtDate(iso) {
+    if (!iso) return "";
+    const [y, m, d] = iso.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+    const meses = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+    return diasSemana[dt.getDay()] + ", " + d + " de " + meses[dt.getMonth()] + " de " + y;
+  }
+  function escapeHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  // ---------- Form: novo culto ----------
+  const form = document.getElementById("cultoForm");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const data = document.getElementById("data").value;
+    const hora = document.getElementById("hora").value;
+    const tema = document.getElementById("tema").value.trim();
+    const pregador = document.getElementById("pregador").value.trim();
+    const dirigente = document.getElementById("dirigente").value.trim();
+    const obs = document.getElementById("obs").value.trim();
+    if (!data) { toast("Informe a data."); return; }
+    const culto = {
+      id: uid(),
+      data, hora, tema, pregador, dirigente, obs,
+      momentos: DEFAULT_MOMENTOS.map((m) => ({ id: uid(), ...m })),
+    };
+    state.cultos.push(culto);
+    saveState();
+    render();
+    form.reset();
+    document.getElementById("hora").value = "19:30";
+    toast("Culto adicionado.");
+  });
+
+  // ---------- Filtros ----------
+  const busca = document.getElementById("filtroBusca");
+  const mes = document.getElementById("filtroMes");
+  busca.addEventListener("input", render);
+  mes.addEventListener("change", render);
+  document.getElementById("limparFiltros").addEventListener("click", () => {
+    busca.value = ""; mes.value = ""; render();
+  });
+
+  // ---------- Export / Import ----------
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "cronograma-expansao-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.getElementById("importBtn").addEventListener("click", () => {
+    document.getElementById("importFile").click();
+  });
+  document.getElementById("importFile").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!data || !Array.isArray(data.cultos)) throw new Error("Formato inválido");
+        if (!confirm("Isso substituirá o cronograma atual. Continuar?")) return;
+        state = data;
+        saveState();
+        render();
+        toast("Importado com sucesso.");
+      } catch (err) {
+        toast("Arquivo inválido.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+
+  // ---------- Tema ----------
+  function applyTheme(t) {
+    if (t) document.documentElement.setAttribute("data-theme", t);
+    else document.documentElement.removeAttribute("data-theme");
+  }
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved) applyTheme(saved);
+  } catch (e) {}
+  document.getElementById("themeBtn").addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    let next;
+    if (!cur) next = prefersDark ? "light" : "dark";
+    else if (cur === "dark") next = "light";
+    else next = "dark";
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
+
+  // ---------- Delegação de ações ----------
+  document.getElementById("lista").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+    const act = btn.dataset.act;
+    const cultoId = btn.dataset.culto;
+    const itemId = btn.dataset.item;
+    const culto = state.cultos.find((c) => c.id === cultoId);
+    if (!culto) return;
+
+    if (act === "del-culto") {
+      if (confirm("Remover este culto?")) {
+        state.cultos = state.cultos.filter((c) => c.id !== cultoId);
+        saveState(); render(); toast("Culto removido.");
+      }
+    } else if (act === "edit-culto") {
+      editCulto(culto);
+    } else if (act === "del-item") {
+      culto.momentos = culto.momentos.filter((m) => m.id !== itemId);
+      saveState(); render();
+    } else if (act === "edit-item") {
+      editItem(culto, itemId);
+    }
+  });
+
+  document.getElementById("lista").addEventListener("submit", (e) => {
+    const form = e.target.closest("form[data-add-item]");
+    if (!form) return;
+    e.preventDefault();
+    const cultoId = form.dataset.addItem;
+    const culto = state.cultos.find((c) => c.id === cultoId);
+    if (!culto) return;
+    const hora = form.querySelector('[name="hora"]').value;
+    const atividade = form.querySelector('[name="atividade"]').value.trim();
+    const responsavel = form.querySelector('[name="responsavel"]').value.trim();
+    if (!atividade) { toast("Informe a atividade."); return; }
+    culto.momentos.push({ id: uid(), hora, atividade, responsavel });
+    culto.momentos.sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
+    saveState(); render();
+  });
+
+  function editCulto(culto) {
+    const tema = prompt("Tema do culto:", culto.tema || "");
+    if (tema === null) return;
+    const pregador = prompt("Pregador(a):", culto.pregador || "");
+    if (pregador === null) return;
+    const dirigente = prompt("Dirigente:", culto.dirigente || "");
+    if (dirigente === null) return;
+    const obs = prompt("Observações:", culto.obs || "");
+    if (obs === null) return;
+    culto.tema = tema.trim();
+    culto.pregador = pregador.trim();
+    culto.dirigente = dirigente.trim();
+    culto.obs = obs.trim();
+    saveState(); render();
+  }
+
+  function editItem(culto, itemId) {
+    const item = culto.momentos.find((m) => m.id === itemId);
+    if (!item) return;
+    const hora = prompt("Horário (HH:MM):", item.hora || "");
+    if (hora === null) return;
+    const atividade = prompt("Atividade:", item.atividade || "");
+    if (atividade === null) return;
+    const responsavel = prompt("Responsável:", item.responsavel || "");
+    if (responsavel === null) return;
+    item.hora = hora.trim();
+    item.atividade = atividade.trim();
+    item.responsavel = responsavel.trim();
+    culto.momentos.sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
+    saveState(); render();
+  }
+
+  // ---------- Render ----------
+  function render() {
+    const lista = document.getElementById("lista");
+    const q = busca.value.trim().toLowerCase();
+    const mesVal = mes.value;
+
+    const cultos = [...state.cultos].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
+    const filtered = cultos.filter((c) => {
+      if (mesVal && !(c.data || "").startsWith(mesVal)) return false;
+      if (q) {
+        const hay = [
+          c.tema, c.pregador, c.dirigente, c.obs,
+          ...(c.momentos || []).flatMap((m) => [m.atividade, m.responsavel]),
+        ].join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      lista.innerHTML = '<div class="empty">Nenhum culto cadastrado ainda. Use o formulário acima para começar.</div>';
+      return;
+    }
+
+    lista.innerHTML = filtered.map(renderCulto).join("");
+  }
+
+  function renderCulto(c) {
+    const momentos = [...(c.momentos || [])].sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
+    const rows = momentos.length === 0
+      ? '<tr><td colspan="4" class="empty">Sem momentos cadastrados.</td></tr>'
+      : momentos.map((m) => `
+          <tr>
+            <td class="time">${escapeHtml(m.hora)}</td>
+            <td>${escapeHtml(m.atividade)}</td>
+            <td>${escapeHtml(m.responsavel) || '<span style="color:var(--muted)">—</span>'}</td>
+            <td class="act-col">
+              <button data-act="edit-item" data-culto="${c.id}" data-item="${m.id}">Editar</button>
+              <button data-act="del-item" data-culto="${c.id}" data-item="${m.id}" class="danger">Remover</button>
+            </td>
+          </tr>
+        `).join("");
+
+    const chips = [];
+    if (c.hora) chips.push(`<span class="chip">${escapeHtml(c.hora)}</span>`);
+    if (c.pregador) chips.push(`<span class="chip">Pregação: ${escapeHtml(c.pregador)}</span>`);
+    if (c.dirigente) chips.push(`<span class="chip">Dirigente: ${escapeHtml(c.dirigente)}</span>`);
+
+    return `
+      <div class="culto-group">
+        <div class="culto-head">
+          <div>
+            <div class="date">${escapeHtml(fmtDate(c.data))}</div>
+            <div class="meta">${escapeHtml(c.tema) || '<em>Sem tema</em>'}</div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">${chips.join("")}</div>
+          <div class="right">
+            <button data-act="edit-culto" data-culto="${c.id}">Editar culto</button>
+            <button data-act="del-culto" data-culto="${c.id}" class="danger">Remover</button>
+          </div>
+        </div>
+        ${c.obs ? `<div style="padding:10px 14px; color:var(--muted); font-size:13px; border-bottom:1px solid var(--line);">${escapeHtml(c.obs)}</div>` : ""}
+        <table class="items">
+          <thead>
+            <tr><th>Hora</th><th>Atividade</th><th>Responsável</th><th></th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <details class="add-item">
+          <summary>+ Adicionar momento</summary>
+          <form data-add-item="${c.id}" class="inline-form">
+            <div class="grid">
+              <div class="field col-2">
+                <label>Horário</label>
+                <input type="time" name="hora" value="19:30" />
+              </div>
+              <div class="field col-6">
+                <label>Atividade</label>
+                <input type="text" name="atividade" placeholder="Ex: Louvor" required />
+              </div>
+              <div class="field col-4">
+                <label>Responsável</label>
+                <input type="text" name="responsavel" placeholder="Nome" />
+              </div>
+            </div>
+            <div class="form-footer">
+              <button type="submit" class="primary">Adicionar</button>
+            </div>
+          </form>
+        </details>
+      </div>
+    `;
+  }
+
+  // Default date = próximo domingo
+  (function initDefaultDate() {
+    const el = document.getElementById("data");
+    const today = new Date();
+    const diasAteDom = (7 - today.getDay()) % 7;
+    const prox = new Date(today);
+    prox.setDate(today.getDate() + (diasAteDom === 0 ? 7 : diasAteDom));
+    const y = prox.getFullYear();
+    const m = String(prox.getMonth() + 1).padStart(2, "0");
+    const d = String(prox.getDate()).padStart(2, "0");
+    el.value = `${y}-${m}-${d}`;
+  })();
+
+  render();
+})();
+</script>
+</body>
+</html>
