@@ -268,7 +268,7 @@
 <div id="toast" class="toast"></div>
 
 <script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
 
 const SUPABASE_URL = "https://hlanykgmgobvmkdbrhah.supabase.co";
 const SUPABASE_KEY = "sb_publishable_UryQ3e7SexzuANnyAgr8Lw_p-LMyaoy";
@@ -351,12 +351,15 @@ el("loginForm").addEventListener("submit", async (e) => {
   const senha = el("senha").value;
   try {
     if (authMode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
       if (error) throw error;
+      if (data?.session?.user) showApp(data.session.user);
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password: senha });
       if (error) throw error;
-      if (!data.session) {
+      if (data?.session?.user) {
+        showApp(data.session.user);
+      } else {
         toast("Conta criada. Verifique seu e-mail para confirmar o acesso.");
         authMode = "login"; updateAuthMode();
       }
