@@ -353,15 +353,19 @@ el("loginForm").addEventListener("submit", async (e) => {
     if (authMode === "login") {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
       if (error) throw error;
-      if (data?.session?.user) showApp(data.session.user);
+      const u = data?.session?.user || data?.user;
+      if (u) { showApp(u); return; }
+      location.reload();
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password: senha });
       if (error) throw error;
-      if (data?.session?.user) {
-        showApp(data.session.user);
-      } else {
+      const u = data?.session?.user || data?.user;
+      if (u && data?.session) { showApp(u); return; }
+      if (u && !data?.session) {
         toast("Conta criada. Verifique seu e-mail para confirmar o acesso.");
         authMode = "login"; updateAuthMode();
+      } else {
+        location.reload();
       }
     }
   } catch (err) {
@@ -394,15 +398,17 @@ supabase.auth.onAuthStateChange((_event, session) => {
 })();
 
 function showLogin() {
-  el("appView").hidden = true;
-  el("loginView").hidden = false;
+  const app = el("appView"), login = el("loginView");
+  app.hidden = true; app.style.display = "none";
+  login.hidden = false; login.style.display = "";
   updateAuthMode();
   teardownRealtime();
   cultos = [];
 }
 async function showApp(user) {
-  el("loginView").hidden = true;
-  el("appView").hidden = false;
+  const app = el("appView"), login = el("loginView");
+  login.hidden = true; login.style.display = "none";
+  app.hidden = false; app.style.display = "";
   el("userLabel").textContent = user.email || "";
   initDefaultDate();
   await loadAll();
