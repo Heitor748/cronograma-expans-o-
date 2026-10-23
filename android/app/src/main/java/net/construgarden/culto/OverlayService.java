@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
+import android.content.pm.ServiceInfo;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.media.AudioAttributes;
@@ -62,7 +63,16 @@ public class OverlayService extends Service {
 
         if (!running) {
             running = true;
-            startForeground(NOTIF_ID, buildNotification("Cronograma ao vivo", "Preparando..."));
+            android.app.Notification n = buildNotification("Cronograma ao vivo", "Preparando...");
+            try {
+                if (Build.VERSION.SDK_INT >= 30) {
+                    startForeground(NOTIF_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+                } else {
+                    startForeground(NOTIF_ID, n);
+                }
+            } catch (Throwable t) {
+                try { startForeground(NOTIF_ID, n); } catch (Throwable ignored) {}
+            }
             attachBubble();
             scheduleTicks();
         }
