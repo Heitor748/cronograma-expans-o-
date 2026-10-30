@@ -175,6 +175,46 @@
   .momento-inscritos { padding: 2px 0 0 14px; }
   .momento-inscritos div { font-size: 13px; color: var(--ink); }
 
+  /* Modo Altar */
+  #altarView {
+    position: fixed; inset: 0; z-index: 100; display: none;
+    background: #0b0e1a; color: #fff;
+    flex-direction: column; padding: 4vh 4vw calc(4vh + env(safe-area-inset-bottom));
+  }
+  #altarView.show { display: flex; }
+  .altar-top { display: flex; align-items: center; gap: 12px; }
+  .altar-top .culto { font-size: clamp(14px, 2.2vw, 22px); color: #aab0cc; font-weight: 600; }
+  .altar-top .clock { margin-left: auto; font-variant-numeric: tabular-nums; font-size: clamp(16px, 2.4vw, 26px); color: #aab0cc; }
+  .altar-top .exit {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff;
+    border-radius: 10px; padding: 10px 16px; font-size: 15px; cursor: pointer;
+  }
+  .altar-main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 1.5vh; min-height: 0; }
+  .altar-label { font-size: clamp(14px, 2vw, 22px); letter-spacing: 0.15em; text-transform: uppercase; color: #8792ff; font-weight: 700; }
+  .altar-title { font-size: clamp(30px, 7vw, 86px); font-weight: 800; line-height: 1.05; }
+  .altar-timer {
+    font-size: clamp(64px, 22vw, 260px); font-weight: 800; line-height: 1;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+  }
+  .altar-timer.warn { color: #ffd84a; }
+  .altar-timer.over { color: #ff6b5e; animation: blink 1s steps(2, start) infinite; }
+  @keyframes blink { 50% { opacity: 0.35; } }
+  .altar-faixa { font-size: clamp(16px, 2.4vw, 30px); color: #aab0cc; font-variant-numeric: tabular-nums; }
+  .altar-resp { font-size: clamp(16px, 2.6vw, 32px); color: #fff; }
+  .altar-next {
+    border-top: 1px solid rgba(255,255,255,0.12); padding-top: 2vh; margin-top: 1vh;
+    display: flex; gap: 16px; align-items: baseline; justify-content: center; flex-wrap: wrap;
+  }
+  .altar-next .lbl { font-size: clamp(12px, 1.6vw, 18px); text-transform: uppercase; letter-spacing: 0.1em; color: #8792ff; font-weight: 700; }
+  .altar-next .txt { font-size: clamp(18px, 3vw, 36px); font-weight: 700; }
+  .altar-next .q { color: #aab0cc; font-size: clamp(14px, 2vw, 24px); }
+  .altar-fila { margin-top: 1.5vh; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .altar-fila .q-item {
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px; padding: 6px 14px; font-size: clamp(13px, 1.8vw, 20px);
+  }
+  .altar-fila .q-item.now { background: #ff6b5e; color: #10131f; font-weight: 700; border-color: #ff6b5e; }
+
   /* Live banner */
   .live {
     position: sticky; top: 0; z-index: 20;
@@ -289,6 +329,7 @@
     </div>
     <div class="actions">
       <span class="user" id="userLabel"></span>
+      <button id="altarBtn" class="primary" title="Modo tela cheia para o altar">Modo Altar</button>
       <button id="nomeBtn" title="Meu nome no cronograma">Meu nome</button>
       <button id="notifBtn" title="Notificações" hidden>Ativar avisos</button>
       <button id="bubbleBtn" title="Bolha flutuante" hidden>Bolha</button>
@@ -365,6 +406,15 @@
     </div>
     <div id="lista"></div>
   </section>
+</div>
+
+<div id="altarView">
+  <div class="altar-top">
+    <div class="culto" id="altarCulto"></div>
+    <div class="clock" id="altarClock"></div>
+    <button class="exit" id="altarExit">Sair</button>
+  </div>
+  <div class="altar-main" id="altarMain"></div>
 </div>
 
 <div id="modalRoot"></div>
@@ -1134,6 +1184,133 @@ function inscritosDoMomento(cultoId, momentoId) {
   return inscricoes.filter((x) => x.culto_id === cultoId && x.momento_id === momentoId
     && x.status !== "recusado" && x.status !== "pendente")
     .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+}
+
+// ================= Modo Altar =================
+let altarTick = null;
+let wakeLock = null;
+
+el("altarBtn").addEventListener("click", enterAltar);
+el("altarExit").addEventListener("click", exitAltar);
+
+async function enterAltar() {
+  el("altarView").classList.add("show");
+  try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); } catch (e) {}
+  try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
+  renderAltar();
+  if (altarTick) clearInterval(altarTick);
+  altarTick = setInterval(renderAltar, 1000);
+}
+async function exitAltar() {
+  el("altarView").classList.remove("show");
+  if (altarTick) { clearInterval(altarTick); altarTick = null; }
+  try { if (wakeLock) { await wakeLock.release(); wakeLock = null; } } catch (e) {}
+  try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {}
+}
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "visible" && el("altarView").classList.contains("show")
+      && "wakeLock" in navigator && !wakeLock) {
+    try { wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
+  }
+});
+
+function fmtRemaining(ms) {
+  const neg = ms < 0;
+  let s = Math.floor(Math.abs(ms) / 1000);
+  const h = Math.floor(s / 3600); s -= h * 3600;
+  const m = Math.floor(s / 60); s -= m * 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  const base = h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+  return (neg ? "+" : "") + base;
+}
+
+function renderAltar() {
+  const view = el("altarView");
+  if (!view.classList.contains("show")) return;
+  const now = new Date();
+  el("altarClock").textContent = hhmm(now) + ":" + String(now.getSeconds()).padStart(2, "0");
+
+  const c = pickCultoAtivo();
+  const main = el("altarMain");
+  el("altarCulto").textContent = c ? (fmtDate(c.data) + (c.tema ? " · " + c.tema : "")) : "";
+
+  if (!c) { main.innerHTML = `<div class="altar-title">Nenhum culto ativo</div>`; return; }
+  const momentos = [...(c.momentos || [])].map((m) => ({ m, s: momentoStart(c, m) }))
+    .filter((x) => x.s).sort((a, b) => a.s - b.s);
+  if (!momentos.length) { main.innerHTML = `<div class="altar-title">Sem momentos cadastrados</div>`; return; }
+
+  const first = momentos[0].s;
+  const lastStart = momentos[momentos.length - 1].s;
+  const cultoFim = new Date(lastStart.getTime() + 60 * 60 * 1000);
+
+  if (now < first) {
+    main.innerHTML = `
+      <div class="altar-label">Começa em</div>
+      <div class="altar-timer">${fmtRemaining(first - now)}</div>
+      <div class="altar-title">${escapeHtml(momentos[0].m.atividade)}</div>
+      <div class="altar-faixa">${hhmm(first)}</div>`;
+    return;
+  }
+  if (now > cultoFim) {
+    main.innerHTML = `<div class="altar-label">Encerrado</div><div class="altar-title">Até o próximo! 🙌</div>`;
+    return;
+  }
+
+  let idx = -1;
+  for (let i = 0; i < momentos.length; i++) {
+    const nextS = momentos[i + 1]?.s;
+    const end = momentoEnd(c, momentos[i].m, momentos[i + 1]?.m);
+    if (now >= momentos[i].s && (nextS ? now < nextS : now <= end)) { idx = i; break; }
+  }
+  if (idx < 0) {
+    const prox = momentos.find((x) => x.s > now);
+    if (prox) {
+      main.innerHTML = `
+        <div class="altar-label">Próximo em</div>
+        <div class="altar-timer">${fmtRemaining(prox.s - now)}</div>
+        <div class="altar-title">${escapeHtml(prox.m.atividade)}</div>`;
+    }
+    return;
+  }
+
+  const cur = momentos[idx];
+  const end = momentoEnd(c, cur.m, momentos[idx + 1]?.m);
+  const rem = end ? (end.getTime() - now.getTime()) : 0;
+  const total = end ? (end.getTime() - cur.s.getTime()) : 0;
+  let cls = "";
+  if (rem < 0) cls = "over";
+  else if (total > 0 && rem < Math.min(60000, total * 0.2)) cls = "warn";
+
+  const faixa = `${hhmm(cur.s)}${end ? " – " + hhmm(end) : ""}`;
+  const resp = (cur.m.responsavel || "").trim();
+  const respHtml = resp
+    ? `<div class="altar-resp">${escapeHtml(resp).split(/\r?\n|,\s*/).filter(Boolean).map((r) => "→ " + r).join(" &nbsp; ")}</div>`
+    : "";
+
+  const prox = momentos[idx + 1];
+  const proxHtml = prox ? `
+    <div class="altar-next">
+      <span class="lbl">A seguir</span>
+      <span class="txt">${escapeHtml(prox.m.atividade)}</span>
+      <span class="q">${hhmm(prox.s)}</span>
+    </div>` : "";
+
+  const fila = inscricoes.filter((x) => x.culto_id === c.id && (x.status === "aprovado" || x.status === "em_andamento"))
+    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+  const filaHtml = fila.length ? `
+    <div class="altar-fila">
+      ${fila.slice(0, 8).map((x) => `<span class="q-item ${x.status === "em_andamento" ? "now" : ""}">${escapeHtml(x.nome)}${x.tipo ? " · " + escapeHtml(x.tipo) : ""}</span>`).join("")}
+    </div>` : "";
+
+  main.innerHTML = `
+    <div class="altar-label">${cls === "over" ? "Tempo esgotado" : "Agora"}</div>
+    <div class="altar-title">${escapeHtml(cur.m.atividade)}</div>
+    <div class="altar-timer ${cls}">${fmtRemaining(rem)}</div>
+    <div class="altar-faixa">${faixa}</div>
+    ${respHtml}
+    ${proxHtml}
+    ${filaHtml}
+  `;
 }
 
 // ================= Meu nome =================
