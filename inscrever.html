@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Quero participar — Culto</title>
+<meta name="theme-color" content="#4b5bd6" />
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<style>
+  :root {
+    --bg: #0f1220; --panel: #171a2b; --ink: #eef0fa; --muted: #9aa1b8;
+    --line: #272b40; --accent: #8792ff; --accent-ink: #0f1220; --ok: #67d49a; --danger: #ff8378;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink); min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 24px; width: 100%; max-width: 420px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 14px; margin: 0 0 20px; }
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+  label { font-size: 13px; color: var(--muted); }
+  input, select {
+    font: inherit; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 9px; padding: 12px; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  button {
+    width: 100%; padding: 14px; border: none; border-radius: 10px;
+    background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 16px;
+    cursor: pointer; font-family: inherit; margin-top: 4px;
+  }
+  button:disabled { opacity: .6; }
+  .ok { text-align: center; }
+  .ok .big { font-size: 48px; margin-bottom: 8px; }
+  .err { color: var(--danger); font-size: 14px; margin-top: 10px; display: none; }
+  .again { background: transparent; border: 1px solid var(--line); color: var(--ink); margin-top: 12px; font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <h1>Quero participar 🙌</h1>
+    <p class="sub">Preencha pra entrar na fila de oportunidade do culto.</p>
+    <form id="form">
+      <div class="field">
+        <label for="nome">Seu nome</label>
+        <input type="text" id="nome" autocomplete="name" required />
+      </div>
+      <div class="field">
+        <label for="igreja">Sua igreja</label>
+        <input type="text" id="igreja" placeholder="De onde você vem" autocomplete="organization" />
+      </div>
+      <div class="field">
+        <label for="tipo">O que você quer fazer?</label>
+        <select id="tipo">
+          <option value="">Prefiro não dizer agora</option>
+          <option value="Cantar">Cantar</option>
+          <option value="Testemunho">Testemunho</option>
+          <option value="Palavra">Palavra</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <button type="submit" id="submitBtn">Quero participar</button>
+      <p class="err" id="err"></p>
+    </form>
+  </div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
+const SUPABASE_URL = "https://hlanykgmgobvmkdbrhah.supabase.co";
+const SUPABASE_KEY = "sb_publishable_UryQ3e7SexzuANnyAgr8Lw_p-LMyaoy";
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+
+const params = new URLSearchParams(location.search);
+const cultoId = params.get("culto");
+
+const form = document.getElementById("form");
+const err = document.getElementById("err");
+const btn = document.getElementById("submitBtn");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  err.style.display = "none";
+  const nome = document.getElementById("nome").value.trim();
+  const igreja = document.getElementById("igreja").value.trim();
+  const tipo = document.getElementById("tipo").value || null;
+  if (!nome) return;
+  btn.disabled = true; btn.textContent = "Enviando...";
+  try {
+    const { error } = await supabase.from("inscricoes").insert({
+      culto_id: cultoId || null, nome, igreja, tipo, status: "pendente",
+    });
+    if (error) throw error;
+    document.getElementById("card").innerHTML = `
+      <div class="ok">
+        <div class="big">✅</div>
+        <h1>Inscrição enviada!</h1>
+        <p class="sub">${escapeHtml(nome)}, seu pedido foi pro dirigente. Fique atento(a), logo te chamam. 🙏</p>
+        <button class="again" onclick="location.reload()">Inscrever outra pessoa</button>
+      </div>`;
+  } catch (e2) {
+    err.textContent = "Não deu pra enviar agora. Tente de novo em instantes.";
+    err.style.display = "block";
+    btn.disabled = false; btn.textContent = "Quero participar";
+  }
+});
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+</script>
+</body>
+</html>

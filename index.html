@@ -145,6 +145,36 @@
   .theme-toggle { font-size: 13px; }
   .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
+  /* Fila de oportunidade */
+  .fila-top { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; margin-bottom: 14px; }
+  .fila-top .field { flex: 1 1 200px; margin: 0; }
+  .fila-sub { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 700; margin: 14px 0 8px; }
+  .insc {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; background: var(--row-alt);
+    flex-wrap: wrap;
+  }
+  .insc .main { flex: 1 1 160px; min-width: 0; }
+  .insc .nome { font-weight: 600; }
+  .insc .meta { font-size: 12px; color: var(--muted); }
+  .insc .tag {
+    display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 999px;
+    background: var(--chip); color: var(--ink); margin-left: 6px;
+  }
+  .insc .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .insc .acts button { padding: 5px 9px; font-size: 12px; }
+  .insc.em-andamento { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .insc.em-andamento .nome::before { content: "🔴 "; }
+  .insc.concluido { opacity: 0.55; }
+  .insc .ord { display: flex; flex-direction: column; gap: 2px; }
+  .insc .ord button { padding: 0 6px; font-size: 12px; line-height: 1.4; }
+  .insc .num { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 700; min-width: 20px; text-align: center; }
+  .fila-empty { color: var(--muted); font-size: 13px; padding: 8px 2px; }
+  .insc-momento { margin-top: 4px; }
+  .insc-momento select { padding: 4px 6px; font-size: 12px; }
+  .momento-inscritos { padding: 2px 0 0 14px; }
+  .momento-inscritos div { font-size: 13px; color: var(--ink); }
+
   /* Live banner */
   .live {
     position: sticky; top: 0; z-index: 20;
@@ -268,6 +298,20 @@
     </div>
   </header>
 
+  <section class="panel" id="filaPanel">
+    <h2>Fila de Oportunidade</h2>
+    <div class="fila-top">
+      <div class="field">
+        <label for="filaCulto">Culto</label>
+        <select id="filaCulto"></select>
+      </div>
+      <button id="convidarBtn" type="button" title="Gerar link e enviar no WhatsApp">Convidar (WhatsApp)</button>
+      <button id="copyLinkBtn" type="button" title="Copiar link de inscrição">Copiar link</button>
+      <button id="addInscBtn" type="button" class="primary">+ Adicionar na hora</button>
+    </div>
+    <div id="filaLista"></div>
+  </section>
+
   <section class="panel">
     <h2>Novo culto</h2>
     <form id="cultoForm">
@@ -365,8 +409,12 @@ const DEFAULT_MOMENTOS = [
 ];
 
 let cultos = [];       // array de { ...culto, momentos: [] }
+let inscricoes = [];   // fila de oportunidade
+let filaCultoId = null; // culto selecionado na fila
 let authMode = "login"; // or "signup"
 let realtimeChannel = null;
+
+const TIPOS = ["Cantar", "Testemunho", "Palavra", "Outro"];
 
 // ---------- helpers ----------
 function el(id) { return document.getElementById(id); }
@@ -512,8 +560,17 @@ async function loadAll() {
     (byCulto[m.culto_id] = byCulto[m.culto_id] || []).push(m);
   }
   cultos = (cs || []).map((c) => ({ ...c, momentos: byCulto[c.id] || [] }));
+
+  const { data: ins, error: e3 } = await supabase
+    .from("inscricoes").select("*")
+    .order("ordem", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (e3) { toast("Erro ao carregar fila: " + e3.message); }
+  else inscricoes = ins || [];
+
   setStatus("online", "sincronizado");
   render();
+  renderFila();
 }
 
 // ---------- realtime ----------
@@ -522,6 +579,7 @@ function setupRealtime() {
   realtimeChannel = supabase.channel("cronograma")
     .on("postgres_changes", { event: "*", schema: "public", table: "cultos" }, handleCultoChange)
     .on("postgres_changes", { event: "*", schema: "public", table: "momentos" }, handleMomentoChange)
+    .on("postgres_changes", { event: "*", schema: "public", table: "inscricoes" }, handleInscChange)
     .subscribe((status) => {
       if (status === "SUBSCRIBED") setStatus("online", "sincronizado");
       else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") setStatus("offline", "offline");
@@ -555,6 +613,19 @@ function handleMomentoChange(payload) {
     }
   } else if (eventType === "DELETE") {
     for (const c of cultos) c.momentos = c.momentos.filter((m) => m.id !== old.id);
+  }
+  render();
+}
+function handleInscChange(payload) {
+  const { eventType, new: nw, old } = payload;
+  if (eventType === "INSERT") {
+    if (!inscricoes.find((x) => x.id === nw.id)) inscricoes.push(nw);
+    if (nw.status === "pendente") toast("Nova inscrição: " + (nw.nome || ""));
+  } else if (eventType === "UPDATE") {
+    const i = inscricoes.findIndex((x) => x.id === nw.id);
+    if (i >= 0) inscricoes[i] = nw; else inscricoes.push(nw);
+  } else if (eventType === "DELETE") {
+    inscricoes = inscricoes.filter((x) => x.id !== old.id);
   }
   render();
 }
@@ -745,6 +816,7 @@ function render() {
   renderLive();
   scheduleAllNotifs();
   pushToNative();
+  renderFila();
 }
 
 function pushToNative() {
@@ -772,10 +844,15 @@ function renderCulto(c) {
           ? escapeHtml(resp).split(/\r?\n|,\s*/).filter(Boolean)
               .map((r) => `<div>→ ${r}</div>`).join("")
           : '<span style="color:var(--muted)">—</span>';
+        const insc = inscritosDoMomento(c.id, m.id);
+        const inscHtml = insc.length
+          ? `<div class="momento-inscritos">${insc.map((x) =>
+              `<div>• ${escapeHtml(x.nome)}${x.igreja ? " <span style='color:var(--muted)'>(" + escapeHtml(x.igreja) + ")</span>" : ""}${x.status === "concluido" ? " ✓" : ""}</div>`).join("")}</div>`
+          : "";
         return `
         <tr>
           <td class="time">${faixa}</td>
-          <td>${escapeHtml(m.atividade)}</td>
+          <td>${escapeHtml(m.atividade)}${inscHtml}</td>
           <td>${respHtml}</td>
           <td class="act-col">
             <button data-act="edit-item" data-culto="${c.id}" data-item="${m.id}">Editar</button>
@@ -833,6 +910,230 @@ function renderCulto(c) {
       </details>
     </div>
   `;
+}
+
+// ================= Fila de Oportunidade =================
+function inviteUrl(cultoId) {
+  return new URL("inscrever.html?culto=" + encodeURIComponent(cultoId), location.href).href;
+}
+function cultoById(id) { return cultos.find((c) => c.id === id) || null; }
+function nextOrdem(cultoId) {
+  const ns = inscricoes
+    .filter((x) => x.culto_id === cultoId && x.status !== "pendente" && x.status !== "recusado")
+    .map((x) => x.ordem || 0);
+  return (ns.length ? Math.max(...ns) : 0) + 1;
+}
+
+el("filaCulto").addEventListener("change", (e) => { filaCultoId = e.target.value; renderFila(); });
+
+el("convidarBtn").addEventListener("click", () => {
+  if (!filaCultoId) { toast("Selecione um culto."); return; }
+  const c = cultoById(filaCultoId);
+  const quando = c ? fmtDate(c.data) : "";
+  const link = inviteUrl(filaCultoId);
+  const texto = `Oportunidade no culto${quando ? " (" + quando + ")" : ""}! Quer participar? Inscreva-se aqui: ${link}`;
+  window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank");
+});
+el("copyLinkBtn").addEventListener("click", async () => {
+  if (!filaCultoId) { toast("Selecione um culto."); return; }
+  const link = inviteUrl(filaCultoId);
+  try { await navigator.clipboard.writeText(link); toast("Link copiado."); }
+  catch (e) { prompt("Copie o link:", link); }
+});
+el("addInscBtn").addEventListener("click", () => {
+  if (!filaCultoId) { toast("Crie/selecione um culto primeiro."); return; }
+  abrirInscricaoModal(null);
+});
+
+function abrirInscricaoModal(insc) {
+  const isEdit = !!insc;
+  const tipoOpts = TIPOS.map((t) =>
+    `<option value="${t}" ${insc && insc.tipo === t ? "selected" : ""}>${t}</option>`).join("");
+  openModal(`
+    <h3>${isEdit ? "Editar inscrição" : "Adicionar na hora"}</h3>
+    <form>
+      <div class="grid">
+        <div class="field col-6"><label>Nome</label>
+          <input type="text" name="nome" value="${escapeHtml(insc ? insc.nome : "")}" required /></div>
+        <div class="field col-6"><label>Igreja</label>
+          <input type="text" name="igreja" value="${escapeHtml(insc ? (insc.igreja || "") : "")}" placeholder="Igreja / de onde vem" /></div>
+        <div class="field col-6"><label>Tipo</label>
+          <select name="tipo"><option value="">—</option>${tipoOpts}</select></div>
+      </div>
+      <div class="form-footer">
+        <button type="button" data-cancel>Cancelar</button>
+        <button type="submit" class="primary">${isEdit ? "Salvar" : "Adicionar à fila"}</button>
+      </div>
+    </form>
+  `, async (fd) => {
+    const nome = fd.nome.trim();
+    if (!nome) { toast("Informe o nome."); return false; }
+    if (isEdit) {
+      const { error } = await supabase.from("inscricoes").update({
+        nome, igreja: fd.igreja.trim(), tipo: fd.tipo || null,
+      }).eq("id", insc.id);
+      if (error) { toast("Erro: " + error.message); return false; }
+      toast("Inscrição atualizada.");
+    } else {
+      const { error } = await supabase.from("inscricoes").insert({
+        culto_id: filaCultoId, nome, igreja: fd.igreja.trim(), tipo: fd.tipo || null,
+        status: "aprovado", ordem: nextOrdem(filaCultoId),
+      });
+      if (error) { toast("Erro: " + error.message); return false; }
+      toast("Adicionado à fila.");
+    }
+  });
+}
+
+el("filaLista").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-iact]");
+  if (!btn) return;
+  const act = btn.dataset.iact;
+  const id = btn.dataset.id;
+  const insc = inscricoes.find((x) => x.id === id);
+  if (!insc) return;
+
+  if (act === "aprovar") {
+    await supabase.from("inscricoes").update({ status: "aprovado", ordem: nextOrdem(insc.culto_id) }).eq("id", id);
+  } else if (act === "recusar") {
+    await supabase.from("inscricoes").update({ status: "recusado" }).eq("id", id);
+  } else if (act === "iniciar") {
+    // zera outro em andamento do mesmo culto
+    for (const x of inscricoes.filter((x) => x.culto_id === insc.culto_id && x.status === "em_andamento" && x.id !== id)) {
+      await supabase.from("inscricoes").update({ status: "aprovado" }).eq("id", x.id);
+    }
+    await supabase.from("inscricoes").update({ status: "em_andamento" }).eq("id", id);
+  } else if (act === "concluir") {
+    await supabase.from("inscricoes").update({ status: "concluido" }).eq("id", id);
+  } else if (act === "voltar") {
+    await supabase.from("inscricoes").update({ status: "aprovado" }).eq("id", id);
+  } else if (act === "editar") {
+    abrirInscricaoModal(insc);
+  } else if (act === "excluir") {
+    if (confirm("Remover " + (insc.nome || "esta inscrição") + "?")) {
+      await supabase.from("inscricoes").delete().eq("id", id);
+    }
+  } else if (act === "subir" || act === "descer") {
+    await moverInsc(insc, act === "subir" ? -1 : 1);
+  }
+});
+
+el("filaLista").addEventListener("change", async (e) => {
+  const sel = e.target.closest("select[data-momento-for]");
+  if (!sel) return;
+  const id = sel.dataset.momentoFor;
+  await supabase.from("inscricoes").update({ momento_id: sel.value || null }).eq("id", id);
+});
+
+async function moverInsc(insc, dir) {
+  const fila = inscricoes
+    .filter((x) => x.culto_id === insc.culto_id && (x.status === "aprovado" || x.status === "em_andamento"))
+    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+  const i = fila.findIndex((x) => x.id === insc.id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= fila.length) return;
+  const a = fila[i], b = fila[j];
+  const ao = a.ordem || 0, bo = b.ordem || 0;
+  await supabase.from("inscricoes").update({ ordem: bo }).eq("id", a.id);
+  await supabase.from("inscricoes").update({ ordem: ao }).eq("id", b.id);
+}
+
+function tipoTag(t) { return t ? `<span class="tag">${escapeHtml(t)}</span>` : ""; }
+
+function renderFila() {
+  const sel = el("filaCulto");
+  if (!sel) return;
+  // popular dropdown
+  const ordered = [...cultos].sort((a, b) => (b.data || "").localeCompare(a.data || ""));
+  if (!ordered.find((c) => c.id === filaCultoId)) {
+    const ativo = (typeof pickCultoAtivo === "function") ? pickCultoAtivo() : null;
+    filaCultoId = ativo?.id || (ordered[0] && ordered[0].id) || null;
+  }
+  sel.innerHTML = ordered.map((c) =>
+    `<option value="${c.id}" ${c.id === filaCultoId ? "selected" : ""}>${escapeHtml(fmtDate(c.data))}${c.tema ? " · " + escapeHtml(c.tema) : ""}</option>`
+  ).join("") || '<option value="">(nenhum culto)</option>';
+
+  const lista = el("filaLista");
+  if (!filaCultoId) { lista.innerHTML = '<div class="fila-empty">Cadastre um culto para começar a fila.</div>'; return; }
+
+  const doculto = inscricoes.filter((x) => x.culto_id === filaCultoId);
+  const pendentes = doculto.filter((x) => x.status === "pendente")
+    .sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+  const fila = doculto.filter((x) => x.status === "aprovado" || x.status === "em_andamento")
+    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+  const concluidos = doculto.filter((x) => x.status === "concluido")
+    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+
+  const c = cultoById(filaCultoId);
+  const momentoOpts = (mid) =>
+    `<option value="">Sem momento</option>` +
+    [...(c?.momentos || [])].sort((a, b) => (a.hora || "").localeCompare(b.hora || ""))
+      .map((m) => `<option value="${m.id}" ${mid === m.id ? "selected" : ""}>${escapeHtml(m.hora || "")} ${escapeHtml(m.atividade || "")}</option>`).join("");
+
+  let html = "";
+
+  html += `<div class="fila-sub">Pedidos de inscrição (${pendentes.length})</div>`;
+  if (!pendentes.length) html += `<div class="fila-empty">Nenhum pedido no momento.</div>`;
+  else html += pendentes.map((x) => `
+    <div class="insc">
+      <div class="main">
+        <div class="nome">${escapeHtml(x.nome)}${tipoTag(x.tipo)}</div>
+        <div class="meta">${escapeHtml(x.igreja || "—")}</div>
+      </div>
+      <div class="acts">
+        <button data-iact="aprovar" data-id="${x.id}" class="primary">Aprovar</button>
+        <button data-iact="recusar" data-id="${x.id}">Recusar</button>
+        <button data-iact="editar" data-id="${x.id}">Editar</button>
+      </div>
+    </div>`).join("");
+
+  html += `<div class="fila-sub">Fila de participação (${fila.length})</div>`;
+  if (!fila.length) html += `<div class="fila-empty">Ninguém na fila ainda.</div>`;
+  else html += fila.map((x, idx) => `
+    <div class="insc ${x.status === "em_andamento" ? "em-andamento" : ""}">
+      <div class="ord">
+        <button data-iact="subir" data-id="${x.id}" ${idx === 0 ? "disabled" : ""}>▲</button>
+        <button data-iact="descer" data-id="${x.id}" ${idx === fila.length - 1 ? "disabled" : ""}>▼</button>
+      </div>
+      <div class="num">${idx + 1}</div>
+      <div class="main">
+        <div class="nome">${escapeHtml(x.nome)}${tipoTag(x.tipo)}</div>
+        <div class="meta">${escapeHtml(x.igreja || "—")}</div>
+        <div class="insc-momento">
+          <select data-momento-for="${x.id}">${momentoOpts(x.momento_id)}</select>
+        </div>
+      </div>
+      <div class="acts">
+        ${x.status === "em_andamento"
+          ? `<button data-iact="concluir" data-id="${x.id}" class="primary">Concluir</button>`
+          : `<button data-iact="iniciar" data-id="${x.id}" class="primary">Chamar</button>`}
+        <button data-iact="editar" data-id="${x.id}">Editar</button>
+        <button data-iact="excluir" data-id="${x.id}" class="danger">×</button>
+      </div>
+    </div>`).join("");
+
+  if (concluidos.length) {
+    html += `<div class="fila-sub">Concluídos (${concluidos.length})</div>`;
+    html += concluidos.map((x) => `
+      <div class="insc concluido">
+        <div class="main">
+          <div class="nome">${escapeHtml(x.nome)}${tipoTag(x.tipo)}</div>
+          <div class="meta">${escapeHtml(x.igreja || "—")}</div>
+        </div>
+        <div class="acts">
+          <button data-iact="voltar" data-id="${x.id}">Voltar à fila</button>
+          <button data-iact="excluir" data-id="${x.id}" class="danger">×</button>
+        </div>
+      </div>`).join("");
+  }
+
+  lista.innerHTML = html;
+}
+
+function inscritosDoMomento(cultoId, momentoId) {
+  return inscricoes.filter((x) => x.culto_id === cultoId && x.momento_id === momentoId
+    && x.status !== "recusado" && x.status !== "pendente")
+    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
 }
 
 // ================= Meu nome =================
